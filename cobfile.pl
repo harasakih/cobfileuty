@@ -144,7 +144,7 @@ sub	usage {
 	print STDOUT "\n";
 	print STDOUT "optional\n";
 	print STDOUT "for common\n";
-	print STDOUT "  --otf   STDOUT or filename\n";
+	print STDOUT "  --otf   STDOUT, filename or ommiting --otf \n";
 	print STDOUT "  --logl  CRI|ERR|WRN|INF|DBG|FNC\n";
 	print STDOUT "for hexdpM.pl\n";
 	print STDOUT "  --dmp   lst|hexstr\n";
