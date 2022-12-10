@@ -1717,7 +1717,7 @@ sub	char2xx {
 
 	$$errmsg = '';
 ## INCK
-	my	$achar;
+	my	$achar = '';
 	if($dec ne '' and $enc ne '')	 { $achar = encode($enc, decode($dec, $char)); }
 	elsif($dec eq '' and $enc ne '') { $achar = encode($enc, $char); }
 	elsif($dec ne '' and $enc eq '') { $achar = decode($dec, $char); }

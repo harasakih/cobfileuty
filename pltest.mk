@@ -157,10 +157,10 @@ hexedit2:
 	@echo "### hexfmtM $(INFHEX2) ###"
 	-@rm $(HEXBIN2) $(HEXEDT2) $(HEXLST2B) $(HEXLST2A)
 	./hexputM.pl --inf=$(INFHEX2) --recfm=V --otf=$(HEXBIN2)
-	./hexeditM.pl --inf=$(HEXBIN2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=edit --otf=$(HEXEDT2) --logl=WRN 
-	./hexeditM.pl --inf=$(HEXBIN2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=fmtpr --iferr=hex
-	./hexeditM.pl --inf=$(HEXEDT2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=fmtpr --iferr=hex
-	-./hexeditM.pl --inf=$(HEXBIN2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=fmtpr --iferr=die
+	./hexeditM.pl --inf=$(HEXBIN2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=edit --otf=$(HEXEDT2) --logl=WRN
+	./hexeditM.pl --inf=$(HEXBIN2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=fmtpr --otf=$(HEXLST2B) --iferr=hex
+	./hexeditM.pl --inf=$(HEXEDT2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=fmtpr --otf=$(HEXLST2A) --iferr=hex
+	-diff $(HEXLST2B) $(HEXLST2A)
 	@echo "### diff(diff) ###"
 	./inqYN.sh
 	@echo "### hexfmtM $(INFHEX2) SUCCESS ###"

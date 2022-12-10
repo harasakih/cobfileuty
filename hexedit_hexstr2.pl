@@ -161,6 +161,20 @@ sub	editrec {
 		my	$pd = &cobfile::num2spd(\$errmsg, $item3, $kpd);
 		&cobfile::hexedit_rep(\$buf, $st, $len, $pd);
 # -------------------------------------------------------------------
+		($st,$len,$type,$tag)	= @{$hash_fmt1{'ITEM2'}};
+		my	$item2	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
+		$item2 += 100;
+		my	$bb = &cobfile::num2bb(\$errmsg, $item2, $len);
+		&cobfile::hexedit_rep(\$buf, $st, $len, $bb);
+# -------------------------------------------------------------------
+		($st,$len,$type,$tag)	= @{$hash_fmt1{'ITEM4'}};
+		my	$item4	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
+		if($item4 eq 'ｱｲｳｴ') {
+			$item4 = 'ｶｷｸｹ';
+		}
+		my	$kana = &cobfile::char2xx_tosjishex(\$errmsg, $item4, $len);
+		&cobfile::hexedit_rep(\$buf, $st, $len, $kana);
+# -------------------------------------------------------------------
 		$$retstr	=	$buf;
 	} elsif($whichfmt eq "FMT2") {
 		($st,$len,$type,$tag)	= @{$hash_fmt2{'ITEM3'}};
@@ -169,6 +183,12 @@ sub	editrec {
 		my	$kpd = $len * 2 - 1;
 		my	$pd = &cobfile::num2spd(\$errmsg, $item3, $kpd);
 		&cobfile::hexedit_rep(\$buf, $st, $len, $pd);
+# -------------------------------------------------------------------
+		($st,$len,$type,$tag)	= @{$hash_fmt2{'ITEM2'}};
+		my	$item2	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
+		$item2 += 100;
+		my	$bl = &cobfile::num2bl(\$errmsg, $item2, $len);
+		&cobfile::hexedit_rep(\$buf, $st, $len, $bl);
 # -------------------------------------------------------------------
 		$$retstr	=	$buf;
 	} else {
