@@ -1,0 +1,24 @@
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7
+# bincomp		: ファイルコンペア
+#
+# Disc	: 
+#	１．二つのファイルの変更部分のみを出力する。
+#	２．上段に入力ファイル１の内容、下段に入力ファイル２のＨＥＸダンプを出力し、
+#	  差分がない箇所は下段に空白、差分がある場合は下段にファイル２を出力する
+#	３．入力ファイルは、固定長／NetCOBOLの可変長／ホストの可変長が可能
+#	４．入力のレコード形式を$ARGVで指定する
+#
+# usage	:
+#	① >bimcmp fxxx (infile1) (infile2)  : 固定長。Xxxはレコード長
+#	② >bimcmp vh   (infile1) (infile2)  : ホスト可変長
+#	③ >bimcmp vn   (infile1) (infile2)  : NetCOBOL可変長
+#
+# OUTPUT :
+#	見出し１
+#	Infile1(HEX)        36(0x20)毎に改行
+#	Infile2(HEX)
+#	┗ 空白             Infile1 == Infile2
+#	┗ Infile2          Infile1 != Infile2
+#	┗ Infile2          Infile1 is EOF && Infile2 is !EOF
+#	┗ Infile1          Infile1 is !EOF && Infile2 is EOF
+#                         

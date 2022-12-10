@@ -1,0 +1,20 @@
+# ingore folder
+.svn/
+.git/
+bin/
+trash/
+
+# ignore file
+*.DS_Store
+*.swp
+*.svnignore
+*._*
+*.o
+*.pyc
+*.EXE
+*.OBJ
+*.DLL
+*.EXP
+*.LIB
+a.out
+!$*

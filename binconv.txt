@@ -1,0 +1,24 @@
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7
+# binconv : 可変長ファイルの形式を変換する
+#
+# Disc	: 
+#	１．入力ファイルは、可変長レコード形式のこと
+#	２．変換の形式を$ARGVで指定するが、現状”HOST⇒NetCOBOL”のみ対応
+#
+# usage	:
+#	① >biconv (type) (infile) (outfile)
+#	    type = host2netl
+#
+# OUTPUT :
+#	infileの可変長形式を変換しoutfileに出力する
+#
+# HOST形式
+#	LL1	+ ZERO + DATA
+#	┗ LL1 : 2byte BigEndian. LENGTH(DATA) + 4.
+#	┗ ZERO : 2byte 0x0000
+#
+# NetCOBOL形式
+#	LL2 + ZERO + DATA + LL2 + ZERO
+#	┗ LL2 : 2byte LittleEndian. LENGTH(DATA) .
+#	┗ ZERO : 2byte 0x0000
+#
