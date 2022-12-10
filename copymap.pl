@@ -209,7 +209,7 @@ my	%zk2type	= (
 	POINTER		=> 'XX',
 	NATIONAL	=> 'CH',
 	NUM_EDIT	=> 'CH',
-#	FLOAT_S		=> 'XX',
+	FLOAT_S		=> 'XX',
 	FLOAT_L 	=> 'XX'
 );
 sub	gettype {
@@ -255,14 +255,14 @@ sub	gettype {
 	if( open $gInf_fh, "<:encoding($gInf_dec)", $gOpt_inf  ) { ; }
 	else { 
 		&dbglog($Msglevel{'ERR'}, ("$myname,$Errcd{FILE}:open:$gOpt_inf"));
-		die "$!";
+		die "!!DIE $myname:,open error:$!";
 	}
 	if($gOpt_otf eq ''){ ; }
 	else {
 		if( open $gOtf_fh, ">", $gOpt_otf ) { ; }
 		else {
 			&dbglog($Msglevel{"ERR"}, "$myname,$Errcd{FILE}:open:$gOpt_otf");
-			die "$!";
+			die "!!DIE $myname,open error:$!";
 		}
 	}
 
@@ -320,14 +320,14 @@ sub	gettype {
 	if( close $gInf_fh ) { ; }
 	else {
 		&dbglog($Msglevel{'ERR'}, ("$myname,$Errcd{FILE}:close:$gOpt_inf"));
-		die "$!";
+		die "!!DIE $myname,close error:$!";
 	}
 	if( $gOpt_otf eq '' ) { ; }
 	else {
 		if( close $gOtf_fh ) { ; }
 		else{
 			&dbglog($Msglevel{'ERR'}, ("$myname,$Errcd{FILE}:close:$gOpt_otf"));
-			die "$!";
+			die "!!DIE $myname,close error:$!";
 		}
 	}
 	&dbglog($Msglevel{'ALL'}, ("---- $0 NORMAL-END ----"));

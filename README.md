@@ -38,12 +38,13 @@ RECFM:COBOLファイルのレコード単位を識別し、レコード単位の
 recfm,lreclに従い入力ファイルを読み込み、HEXダンプする
 
 ```sh
-./hexdpM.pl --recfm=F --lrecl=LRECL --inf=INFILE [--otf=OTFILE] 
-./hexdpM.pl --recfm=V --inf=INFILE [--otf=OTFILE]
+./hexdpM.pl --recfm=F --lrecl=LRECL --inf=INFILE [--otf=OTFILE] [--dmp=lst|hexstr]
+./hexdpM.pl --recfm=V --inf=INFILE [--otf=OTFILE] [--dmp=lst|hexstr]
 ```
 
 - dmp=lst : HEXダンプをリスト形式で出力
 - dmp=hexstr : HEXダンプをタイトルや区切りなし、レコード単位で改行して出力、hexputM.plの入力取得での利用を想定。
+	- デフォルトは```lst```
 
 ### ファイル作成【単純なバイナリ化、パディングなし】
 入力ファイルは改行区切りで読み込み、１６進文字列をバイナリ化してrecfm,lreclに従い出力する。
@@ -70,23 +71,24 @@ hexputM.pl --recfm=F --lrecl=LRECL --inf=INFILE --otf=OTFILE --pad=hh
 項目情報はreqオプションで指定するファイルに記述する。reqオプション省略時は、```hexfmt_sub.pl```がデフォルト。
 
 ```sh
-hexfmtM.pl --recfm=F --lrecl=LRECL --inf=INFILE [--otf=OTFILE] [--req=sub.pl] [--iferr=hex]
-hexfmtM.pl --recfm=V --inf=INFILE [--otf=OTFILE] [--req=sub.pl] [--iferr=hex]
+hexfmtM.pl --recfm=F --lrecl=LRECL --inf=INFILE [--otf=OTFILE] [--req=sub.pl] [--iferr=hex|null]
+hexfmtM.pl --recfm=V --inf=INFILE [--otf=OTFILE] [--req=sub.pl] [--iferr=hex|null]
 ```
-- iferr指定あり（引数なし） : 分解した項目が形式不正の場合、&H+１６進文字列で出力する。
-- iferr指定なし :　分解した項目が形式不正の場合、空文字となりなにも出力されない。
+- iferr=hex : 分解した項目が形式不正の場合、&H+１６進文字列で出力する。
+- iferr=null : 分解した項目が形式不正の場合、空文字となり何も出力しない。
+	- デフォルトは```null```
 
 ### ファイル編集
 レコードを項目分解し、編集する。
 項目情報はreqオプションで指定するファイルに記述する。reqオプション省略時は、```hexedit_sub.pl```がデフォルト。
 
 ```sh
-hexeditM.pl --recfm=F --lrecl=LRECL --inf=INFILE [--otf=OTFILE] --edit=edit [--req=sub.pl] [--iferr=hex]
-hexeditM.pl --recfm=V --inf=INFILE [--otf=OTFILE] --edit=edit [--req=sub.pl] [--iferr=hex]
+hexeditM.pl --recfm=F --lrecl=LRECL --inf=INFILE [--otf=OTFILE] --edit=edit [--req=sub.pl] [--iferr=hex|null]
+hexeditM.pl --recfm=V --inf=INFILE [--otf=OTFILE] --edit=edit [--req=sub.pl] [--iferr=hex|null]
 ```
-- iferr指定あり（引数なし） : 分解した項目が形式不正の場合、&H+１６進文字列で出力する。
-- iferr指定なし :　分解した項目が形式不正の場合、空文字となりなにも出力されない。
-
+- iferr=hex : 分解した項目が形式不正の場合、&H+１６進文字列で出力する。
+- iferr=null :　分解した項目が形式不正の場合、空文字となり何も出力しない。
+	- デフォルトは```null```
 
 ## 項目情報
 ``hexfmtM.pl, hexeditM.pl``で使用する項目情報は、このファイルを参考とし、``#### 変更START ▼▼▼▼▼▼`` から ``#### 変更END   ▲▲▲▲▲▲`` で囲まれた箇所を修正する。
@@ -177,7 +179,8 @@ my	%hash_for_array_fmts = (
 	FMT1 => \@array_fmt1, FMT2 => \@array_fmt2
 );
 ```
-```hexfmt_sub.pl```を参照。```edit=fmtpr```時に、この箇所でしたいした順に出力するため指定する。ハッシュを使って出力すると、キーソート順での出力しかできず、記載順の出力ができないため、重複記述となるがやむなし。
+```hexfmt_sub.pl```を参照。
+```edit=fmtpr```時に、この箇所で指定した順に出力するため指定する。ハッシュを使って出力すると、キーソート順での出力しかできず、記載順の出力ができないため、重複記述となるがやむなし。
 
 #### フォーマット名の判定:getfmtid()
 

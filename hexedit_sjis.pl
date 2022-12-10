@@ -192,7 +192,8 @@ sub	fmtprint {
 
 	my	$myname	= (caller 0)[3];
 #
-	my	$errmsg;
+	my	$errmsg = '';
+	$$retstr	= '';
 ###########################################################
 ## レコードFMT[ $whichfmt ]の確定
 ###########################################################
@@ -206,7 +207,6 @@ sub	fmtprint {
 ###########################################################
 ## レコードFMTに従い、項目ダンプを出力
 ###########################################################
-	$$retstr	= '';
 	my	$refto_array_fmtN	= $hash_for_array_fmts{ $whichfmt };
 	my	@tmparray			= @$refto_array_fmtN;
 	foreach	my $refto_lst (@tmparray) {

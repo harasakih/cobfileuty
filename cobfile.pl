@@ -91,13 +91,16 @@ our	$pkupk_S16bit	= "s";	our	$pkupk_U16bit	= "S";
 our	$pkupk_S32bit	= "l";	our	$pkupk_U32bit	= "L";
 our	$pkupk_S64bit	= "q";	our	$pkupk_U64bit	= "Q";
 ## COBOL PACK,ZONEの符号キャラ
-our	$PackSignPlus	= 	'C';	# num2xpdの符号部、pd2numの符号チェック
+# num2xpdの符号部、pd2numの符号チェック / +-@ : host[CDF] -> NetCOB[CDF]
+our	$PackSignPlus	= 	'C';
 our	$PackSignMinus	=	'D';
 our	$PackSignAbs	=	'F';
-our	$ZoneSignPlus	= 	'+';	# num2xzdの符号部、zd2numの符号チェック
-our	$ZoneSignMinus	=	'-';
-our	$ZoneSignAbs	=	'@';	
-our	$ZoneUpHalfPad	=	'3';	# num2xzdの中間部上４ビット
+# num2xzdの符号部、zd2numの符号チェック / +-@ : host[CDF] -> NetCOB[453]
+our	$ZoneSignPlus	= 	'4';	
+our	$ZoneSignMinus	=	'5';
+our	$ZoneSignAbs	=	'3';	
+# num2xzdの中間部上４ビット
+our	$ZoneUpHalfPad	=	'3';
 ##
 our	$HanSP_hex		=	'20';	# char2xx のパディング
 #
@@ -253,7 +256,7 @@ sub	optck { my	($usagemsg)	=	@_;
 	}
 ## $gOpt_iferr ; 任意、未設定時['']
 	if(! defined($gOpt_iferr)) { $gOpt_iferr = ''; }
-	if($gOpt_iferr eq "null" || $gOpt_iferr eq "hex" || $gOpt_iferr eq '') { ; } 
+	if($gOpt_iferr eq "null" || $gOpt_iferr eq "hex" || $gOpt_iferr eq "die" || $gOpt_iferr eq '') { ; } 
 	else {							&dbglog($Msglevel{'ERR'}, "$myname,err iferr:$gOpt_iferr");				$err += 1;}
 ## $gOpt_pad ; 任意、未設定時['']
 	if(! defined($gOpt_pad)) { $gOpt_pad = ''; }
@@ -264,7 +267,7 @@ sub	optck { my	($usagemsg)	=	@_;
 #######################################
 	if($err > 0) {
 		&dbglog($Msglevel{'ALL'}, ("---- $0 ABEND(optck) ----"));
-		die "!!DIE $!" ;
+		die "!!DIE $myname,optck:$!" ;
 	} else {
 		;
 	}
@@ -284,7 +287,7 @@ sub	optck { my	($usagemsg)	=	@_;
 #######################################
 	if($err > 0) {
 		&dbglog($Msglevel{'ALL'}, ("---- $0 ABEND(optck) ----"));
-		die "!!DIE $!" ;
+		die "!!DIE $myname,optck:$!" ;
 	} else {
 		return $TRUE;
 	}
@@ -349,20 +352,20 @@ sub	hexedit {
 	$addmsg	.=	"]";
 	&dbglog($Msglevel{'ALL'}, ("---- $0,$myname START $addmsg ----"));
 # -----------------------------------------------------------------------
-	if(&hexedit::init_pre($Infile, $Otfile) != $TRUE) { die "$myname,init_pre returns FALSE:$!"; }
+	if(&hexedit::init_pre($Infile, $Otfile) != $TRUE) { die "!!DIE $myname,init_pre returns FALSE:$!"; }
 # -----------------------------------------------------------------------
 ## OPEN-INPUT
-	if(&openBinput($Infile)) { ; } else { die "!!DIE $!"; }
+	if(&openBinput($Infile)) { ; } else { die "!!DIE $myname,open error:$!"; }
 ## OPEN-OUTPUT
 	my	$otrecfm	= $Otfile->recfm;
-	if($otrecfm =~ /^[FV]$/)	{ &openBoutput($Otfile) || die "!!DIE $!"; }
-	elsif($otrecfm eq 'T') 		{ &openToutput($Otfile) || die "!!DIE $!"; }
+	if($otrecfm =~ /^[FV]$/)	{ &openBoutput($Otfile) || die "!!DIE $myname,open error:$!"; }
+	elsif($otrecfm eq 'T') 		{ &openToutput($Otfile) || die "!!DIE $myname,open error:$!"; }
 	else {
 		&dbglog($Msglevel{'ERR'}, "$myname,err ot_recfm:$otrecfm");
-		die "!!DIE $!"; 
+		die "!!DIE $myname,recfm error:$!"; 
 	}
 # -----------------------------------------------------------------------
-	if(&hexedit::init_aft($Infile, $Otfile) != $TRUE) { die "$myname,init_aft returns FALSE:$!"; }
+	if(&hexedit::init_aft($Infile, $Otfile) != $TRUE) { die "!!DIE $myname,init_aft returns FALSE:$!"; }
 # -----------------------------------------------------------------------
 ## READ-LOOP
 	my	$inhex;
@@ -373,7 +376,7 @@ sub	hexedit {
 # -----------------------------------------------------------------------
 	}
 # -----------------------------------------------------------------------
-	if(&hexedit::term_pre($Infile, $Otfile) != $TRUE) { die "$myname,term_pre returns FALSE:$!"; }
+	if(&hexedit::term_pre($Infile, $Otfile) != $TRUE) { die "!!DIE $myname,term_pre returns FALSE:$!"; }
 # -----------------------------------------------------------------------
 ## CLOSE-INPUT
 	if( &closeAny( $Infile ) == $TRUE ) { 
@@ -394,7 +397,7 @@ sub	hexedit {
 		return $FALSE;
 	}
 # -----------------------------------------------------------------------
-	if(&hexedit::term_aft($Infile, $Otfile) != $TRUE) { die "$myname,term_aft returns FALSE:$!"; }
+	if(&hexedit::term_aft($Infile, $Otfile) != $TRUE) { die "!!DIE $myname,term_aft returns FALSE:$!"; }
 # -----------------------------------------------------------------------
 ## END-MSG
 	&dbglog($Msglevel{'ALL'}, ("---- $0 NORMAL-END ----"));
@@ -473,7 +476,8 @@ sub	hexedit_rep	{
 
 # --------------------------------------------------------------
 # METHOD        : perlval : getitem(\$ref, \$errmsg, $hexstr, $st, $len, $type, $midashi, $enc)
-# DESCRIPTION   : getitem2のラッパー。$midashiを除く
+# DESCRIPTION   : getitem2のラッパー、$midashiを省略。数値例外時は iferrの指定で、DIE,&H付加をする。
+# 
 # --------------------------------------------------------------
 sub	getitem {
 	my	($ref, $errmsg, $hexstr, $st, $len, $type, $midashi, $enc)	=	@_;
@@ -481,9 +485,17 @@ sub	getitem {
 	my	$myname	= (caller 0)[3];
 #
 	my	$item	= &getitem2($ref, $errmsg, $hexstr, $st, $len, $type, $enc);
-	if($gOpt_edit eq 'fmtpr' && $gOpt_iferr eq 'hex' && $$errmsg ne ''){
+# 項目取得エラー時、iferr=die
+	if($gOpt_iferr eq 'die' && $$errmsg ne ''){
+		my	$iocnt = $ref->iocnt;
+		&dbglog($Msglevel{'ERR'}, "$myname,get[$item]from,rec=$iocnt,ST=$st,LL=$len,TY=$type,ENC=$enc:$$errmsg");
+		die "!!DIE $myname,getitem:$!";
+	}
+# 項目取得エラー時、iferr=hex
+	if($gOpt_iferr eq 'hex' && $gOpt_edit eq 'fmtpr' && $$errmsg ne ''){
 		$item	= "&H" . substr($hexstr, $st*2, $len*2);
 	} else { ; }
+# FNC
 	&dbglog($Msglevel{'FNC'}, "$myname,get[$item]from",
 		"ST:$st,LL:$len,TY:$type,MD:$midashi,ENC:$enc",
 		"$hexstr"
@@ -513,15 +525,19 @@ sub	getitem2 {
 	my	$myname	= (caller 0)[3];
 #
 	if(! defined($enc)) { $enc = ''; }
+# FNC
 	&dbglog($Msglevel{'FNC'}, "$myname,ST:$st,LL:$len,TY:$type,ENC:$enc",
-		">$hexstr"
-	);
+	"  >$hexstr:");
 
 	my	$myerrmsg = '';
 	if($type eq 'PD') 		{
 		$ret = &pd2num(\$myerrmsg, substr($hexstr, $st*2, $len*2));
 	 } elsif($type eq 'ZD')	{ 
 		$ret = &zd2num(\$myerrmsg, substr($hexstr, $st*2, $len*2));
+	 } elsif($type eq 'BL')	{ 
+		$ret = &bl2num(\$myerrmsg, substr($hexstr, $st*2, $len*2));
+	 } elsif($type eq 'BB')	{ 
+		$ret = &bb2num(\$myerrmsg, substr($hexstr, $st*2, $len*2));
 	} elsif($type eq 'CH')	{ 
 		my	$decode	= $ref->decenc;
 		if(! defined($enc)) { $enc = '';}	# 省略はエンコードなし（perl内部コードにエンコード）
@@ -529,11 +545,15 @@ sub	getitem2 {
 	} elsif($type eq 'XX')	{ 
 		$ret = substr($hexstr, $st*2, $len*2);
 	} else { ; }
-
-	if($myerrmsg ne '' ) {	&dbglog($Msglevel{'WRN'}, "$myname,$myerrmsg"); }
-	&dbglog($Msglevel{'FNC'}, 
-		"<$ret"
-	);
+# WRN
+	if($myerrmsg ne '' ) {	
+		my	$iocnt = $ref->iocnt;
+		&dbglog($Msglevel{'WRN'}, "$myname,return[$ret],rec=$iocnt,ST=$st,LL=$len,TY=$type,ENC=$enc:$myerrmsg");
+	}
+# FNC
+	&dbglog($Msglevel{'FNC'}, "$myname",
+	"  <$ret:");
+	
 	$$errmsg = $myerrmsg;
 	return $ret;
 } # getitem2
@@ -1170,7 +1190,7 @@ sub	hexdp {
 	if( &openBinput( $Inf ) == $TRUE ) { ; } 
 	else {
 		&dbglog($Msglevel{'ERR'}, "$myname,cannot open infile");
-		die "$!";
+		die "!!DIE $myname,open error:$!";
 	}
 
 	my	$otfname	= $Otf->fname;
@@ -1179,14 +1199,14 @@ sub	hexdp {
 		;
 	} else {
 		&dbglog($Msglevel{'ERR'}, "$myname,cannot open otfile");
-		die "$!";
+		die "!!DIE $myname,open error:$!";
 	}
 
 	if($type eq "lst" || $type eq "hexstr"){
 		;
 	} else {
 		&dbglog($Msglevel{'ERR'}, "$myname,type not lst,hexstr");
-		die "$!";
+		die "!!DIe $myname,type error:$!";
 	}
 
 #######################################
@@ -1233,7 +1253,7 @@ sub	hexdp {
 		&dbglog($Msglevel{'ALL'}, "IOCNT[$fname]=$iocnt");
 	} else {
 		&dbglog($Msglevel{'ERR'}, "$myname,cannot close infile");
-		die "$!";
+		die "!!DIE $myname,close error:$!";
 	}
 ## OUTPUT
 	if($otfname eq '') {
@@ -1246,7 +1266,7 @@ sub	hexdp {
 		&dbglog($Msglevel{'ALL'}, "IOCNT[$fname]=$iocnt");
 	} else {
 		&dbglog($Msglevel{'ERR'}, "$myname,cannot close otfile");
-		die "$!";
+		die "!!DIe $myname,close error:$!";
 	}
 	&dbglog($Msglevel{'ALL'}, ("---- $0 NORMAL-END ----"));
 	return $TRUE;
@@ -1305,14 +1325,14 @@ sub	hexputFile {
 	if( &openTinput( $Inf ) == $TRUE ) { ; } 
 	else {
 		&dbglog($Msglevel{'ERR'}, "$myname,cannot open infile");	
-		die "$!";
+		die "!!DIE $myname,open error:$!";
 	}
 
 	my	$otfname	= $Otf->fname;
 	if( $otfname eq '' || &openBoutput( $Otf ) == $TRUE ) { ; } 
 	else {
 		&dbglog($Msglevel{'ERR'}, "$myname,cannot open otfile");
-		die "$!";
+		die "!!DIE $myname,open error:$!";
 	}
 
 #######################################
@@ -1322,7 +1342,7 @@ sub	hexputFile {
 	while( &readTrec($Inf, \$inrec) != $EOF) {
 		my	$errmsg;
 		if(&ishexstr(\$errmsg, $inrec) != $TRUE) {
-			&dbglog($Msglevel{'ERR'}, "$myname,not hexstr:$inrec");
+			&dbglog($Msglevel{'ERR'}, ("$myname,not hexstr:$inrec", $errmsg));
 			last;		# exit while-loop
 		}
 		if($Otf->recfm eq 'F' && $gOpt_pad ne '') {
@@ -1348,7 +1368,7 @@ sub	hexputFile {
 		&dbglog($Msglevel{'ALL'}, "IOCNT[$fname]=$iocnt");
 	} else {
 		&dbglog($Msglevel{'ERR'}, "$myname,cannot close infile");
-		die "$!";
+		die "!!DIE $myname,close error:$!";
 	}
 ## OUTPUT
 	if( $otfname eq '') {
@@ -1361,7 +1381,7 @@ sub	hexputFile {
 		&dbglog($Msglevel{'ALL'}, "IOCNT[$fname]=$iocnt");
 	} else {
 		&dbglog($Msglevel{'ERR'}, "$myname,cannot close otfile");
-		die "$!";
+		die "!!DIE $myname,close error:$!";
 	}
 	&dbglog($Msglevel{'ALL'}, ("---- $0 NORMAL-END ----"));
 	return $TRUE;
@@ -1776,7 +1796,7 @@ sub	xx2char_fromutf8hex {
 #	i:$dec		: HEXSTRを解釈する文字コード
 #	i:$enc		: 変換先の文字コード
 # RETURN
-#	文字列（$encの文字コードで格納）
+#	文字列（$encの文字コードで格納）。エラー時は'''
 # --------------------------------------------------------------
 sub	xx2char {
 	my	($errmsg, $hexstr, $dec, $enc)	=	@_;
@@ -1789,7 +1809,7 @@ sub	xx2char {
 	elsif($dec eq '' and $enc ne '') { $achar = encode($enc , $hexval); }
 	elsif($dec ne '' and $enc eq '') { $achar = decode($dec , $hexval); }
 	elsif($dec eq '' and $enc eq '') { $achar = $hexval; }
-	else { ; }
+	else { $achar = ''; }
 	return $achar;
 }
 
@@ -2052,6 +2072,7 @@ sub	ishexstr {
 	my	($errmsg, $hexstr)	=	@_;
 
 ## INCK:HEX。null-strを許容するので、^[..]＊
+	$$errmsg = '';
 	if( $hexstr =~ /^[0-9A-Fa-f]*$/) {	; } 
 	else { 
 		$$errmsg	= $Errcd{HEX} . ":not hex($hexstr)";
