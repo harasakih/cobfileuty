@@ -20,7 +20,7 @@ $cobfile::ZoneSignAbs	=	'F';
 # --------------------------------------------------------------
 #	フォーマット定義
 # --------------------------------------------------------------
-#### 変更START
+#### 変更START ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 ## レコードフォーマット＃１
 my	%hash_fmt1	=	(
 	ITEM1 => [0,4,'ZD','item11'], 
@@ -38,8 +38,9 @@ my	%hash_fmt2	=	(
 my	%hash_for_hash_fmts = (
 	FMT1 => \%hash_fmt1, FMT2 => \%hash_fmt2
 );
+#### 変更END   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
-## レコードフォーマット＃２、レコードフォーマット＃１と同じもの
+#### 変更START ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 my	@array_fmt1	=	(
 	[0,4,'ZD','item11'], 
 	[4,4,'PD','item12'], 
@@ -56,7 +57,7 @@ my	@array_fmt2	=	(
 my	%hash_for_array_fmts = (
 	FMT1 => \@array_fmt1, FMT2 => \@array_fmt2
 );
-#### 変更END
+#### 変更END   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 # --------------------------------------------------------------
 # METHOD        : FMTID : getfmtid(\$refin, \$errmsg, $hexstr)
@@ -74,15 +75,17 @@ sub	getfmtid {
 	my	$myerrmsg;
 
 	my	$myname	= (caller 0)[3];
-#### 変更START
-	my	$hantei	=	&cobfile::getitem($refin, \$myerrmsg, $hexstr, (0, 4, 'XX', ''), '');
+	my	$decenc = '';
+#### 変更START ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+	my	@wk_hantei = (0, 4, 'XX', '');
+	my	$hantei	=	&cobfile::getitem($refin, \$myerrmsg, $hexstr, @wk_hantei, $decenc);
 	my	$fmtid = '';
 	if   ($hantei eq 'F0F1F2F3') {	$fmtid	=	"FMT1";	} 
 	elsif($hantei eq 'F3F5F6F7') {	$fmtid	=	"FMT1";	} 
 	elsif($hantei eq 'F1F2F3F4') {	$fmtid	=	"FMT2";	} 
 	elsif($hantei eq 'F1F6F7F8') {	$fmtid	=	"FMT2";	} 
 	else { ; }
-#### 変更END
+#### 変更END   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 	$$errmsg = $myerrmsg;
 	return	$fmtid;
 }
@@ -151,7 +154,7 @@ sub	editrec {
 
 	my	$refto_hash_fmtN	= $hash_for_hash_fmts{ $whichfmt };
 	my	($st,$len,$type,$tag);
-#### 変更START
+#### 変更START ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 	if($whichfmt eq "FMT1") {
 		my	$item1	=	&cobfile::getitem($refin, \$errmsg, $hexstr, (@{$$refto_hash_fmtN{ 'ITEM1' }}), $enc) ;
 		my	$item2	=	&cobfile::getitem($refin, \$errmsg, $hexstr, (@{$$refto_hash_fmtN{ 'ITEM2' }}), $enc) ; 
@@ -163,14 +166,17 @@ sub	editrec {
 		my	$item3	=	&cobfile::getitem($refin, \$errmsg, $hexstr, (@{$$refto_hash_fmtN{ 'ITEM3' }}), $enc) ; 
 # -------------------------------------------------------------------
 		my	$buf	=	$hexstr;
-		($st,$len,$type,$tag)	= @{$$refto_hash_fmtN{ 'ITEM3' }};
+#		($st,$len,$type,$tag)	= @{$$refto_hash_fmtN{ 'ITEM3' }};
+		($st,$len,$type,$tag)	= @{$hash_fmt2{'ITEM3'}};
 		&cobfile::hexedit_rep(\$buf, $st, $len, &cobfile::char2xx_tosjishex(\$errmsg, 'あい', 4));
+
 		($st,$len,$type,$tag)	= @{$$refto_hash_fmtN{ 'ITEM4' }};
+#		($st,$len,$type,$tag)	= @{$hash_fmt2{'ITEM4'}};
 		&cobfile::hexedit_rep(\$buf, $st, $len, '0A0B0C0D');
 
 		$$retstr	=	$buf;
 	}
-#### 変更END
+#### 変更END   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 	return $cobfile::TRUE;
 }
 
