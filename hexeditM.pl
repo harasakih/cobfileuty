@@ -92,7 +92,7 @@ package	main;
 		 "DCB-DECENC:$decenc"
 		)
 	);
-	&cobfile::hexedit($Infile, $Otfile);
+	&cobfile::hexeditFile($Infile, $Otfile);
 
 # ---------------------------------------------------
 #	EXIT-Perl

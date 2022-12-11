@@ -337,7 +337,7 @@ sub	dbglog {
 # REURN
 #  R OK/NG
 # --------------------------------------------------------------
-sub	hexedit {
+sub	hexeditFile {
 	my	($Infile, $Otfile)	=	@_;
 
 	my	$myname	= (caller 0)[3];
@@ -372,7 +372,7 @@ sub	hexedit {
 	my	$othex;
 	while((my $ll = &readBrec($Infile, \$inhex)) != $EOF ) {
 # -----------------------------------------------------------------------
-		if( &hexedit::record_exit($Infile, $Otfile, $inhex, \$othex) == $EOF ){ last; };
+		if( &record_exit($Infile, $Otfile, $inhex, \$othex) == $EOF ){ last; };
 # -----------------------------------------------------------------------
 	}
 # -----------------------------------------------------------------------
@@ -403,6 +403,43 @@ sub	hexedit {
 	&dbglog($Msglevel{'ALL'}, ("---- $0 NORMAL-END ----"));
 	return	$TRUE;
 
+}
+
+# --------------------------------------------------------------
+# METHOD        : TRUE|EOF|FALSE : record_exit(\$refin, \$refot, $hexstr, \$retstr)
+# DESCRIPTION	: FWから呼び出される入力レコード毎の出口。fmtprint,edirrecへのラッパー
+# DESC-SUB		: EOFを返却すると、FWは終了処理へ向かう、以外はループ
+# PARAM
+#  i:\$refin	: 入力ファイルのFcntl
+#  i:\$refot	: 出力ファイルのFcntl
+#  i:$hexstr	: 読み込んだレコード（HEXSTR変換後）が渡される
+#  o:\$retstr	: FWに返却するレコード。FWは未使用
+# REURN
+#  R OK/NG
+# --------------------------------------------------------------
+sub	record_exit {
+	my	($refin, $refot, $hexstr, $retstr)	=	@_;
+
+	my	$myname	= (caller 0)[3];
+#
+	my	$ret_record_exit = '';
+	if($gOpt_edit eq 'edit') {
+		$ret_record_exit = &hexedit::editrec($refin, $refot, $hexstr, $retstr);
+		&dbglog($Msglevel{'DBG'}, "$myname,editrec returns:$$retstr");
+	} elsif($gOpt_edit eq 'fmtpr') {
+#### hexedit::hash_for_array_fmts はourで宣言されていること
+#OK		foreach my $key(keys(%hexedit::hash_for_array_fmts)) { print ">$key\n"; }
+		my	$ref_hash = \%hexedit::hash_for_array_fmts ;
+### 
+		$ret_record_exit = &hexedit::fmtprint($refin, $refot, $hexstr, $retstr, $ref_hash);
+		&dbglog($Msglevel{'DBG'}, "$myname,fmtprint returns:$$retstr");
+	}
+	if( $ret_record_exit == $TRUE ) {
+		if($refot->recfm =~ /^[FV]$/)	{ &writeBrec($refot, $$retstr); }
+		elsif($refot->recfm eq 'T')		{ &writeTrec($refot, $$retstr); }
+		else { &dbglog($bobfile::Msglevel{'ERR'}, ("$myname,err ot_recfm"));}
+	}
+	return	$ret_record_exit;
 }
 
 # --------------------------------------------------------------

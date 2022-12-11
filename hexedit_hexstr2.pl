@@ -33,7 +33,8 @@ my	%hash_fmt2	=	(
 	ITEM5 => [12,8,'CH','item35']
 );
 ## レコードフォーマットへのリファレンス
-my	%hash_for_hash_fmts = (
+## cobfile.plから参照できるように、ourで宣言する
+our	%hash_for_hash_fmts = (
 	FMT1 => \%hash_fmt1, FMT2 => \%hash_fmt2
 );
 #### 変更END   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
@@ -53,7 +54,8 @@ my	@array_fmt2	=	(
 	[12,8,'CH','item35']
 );
 ## レコードフォーマットへのリファレンス
-my	%hash_for_array_fmts = (
+## cobfile.plから参照できるように、ourで宣言する
+our	%hash_for_array_fmts = (
 	FMT1 => \@array_fmt1, FMT2 => \@array_fmt2
 );
 #### 変更END   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
@@ -87,38 +89,6 @@ sub	getfmtid {
 	return	$fmtid;
 }
 
-# --------------------------------------------------------------
-# METHOD        : TRUE|EOF|FALSE : record_exit(\$refin, \$refot, $hexstr, \$retstr)
-# DESCRIPTION	: FWから呼び出される入力レコード毎の出口。fmtprint,edirrecへのラッパー
-# DESC-SUB		: EOFを返却すると、FWは終了処理へ向かう、以外はループ
-# PARAM
-#  i:\$refin	: 入力ファイルのFcntl
-#  i:\$refot	: 出力ファイルのFcntl
-#  i:$hexstr	: 読み込んだレコード（HEXSTR変換後）が渡される
-#  o:\$retstr	: FWに返却するレコード。FWは未使用
-# REURN
-#  R OK/NG
-# --------------------------------------------------------------
-sub	record_exit {
-	my	($refin, $refot, $hexstr, $retstr)	=	@_;
-
-	my	$myname	= (caller 0)[3];
-#
-	my	$ret_record_exit = '';
-	if($cobfile::gOpt_edit eq 'edit') {
-		$ret_record_exit = &editrec($refin, $refot, $hexstr, $retstr);
-		&cobfile::dbglog($cobfile::Msglevel{'DBG'}, "$myname,editrec returns:$$retstr");
-	} elsif($cobfile::gOpt_edit eq 'fmtpr') {
-		$ret_record_exit = &fmtprint($refin, $refot, $hexstr, $retstr);
-		&cobfile::dbglog($cobfile::Msglevel{'DBG'}, "$myname,fmtprint returns:$$retstr");
-	}
-	if( $ret_record_exit == $cobfile::TRUE ) {
-		if($refot->recfm =~ /^[FV]$/)	{ &cobfile::writeBrec($refot, $$retstr); }
-		elsif($refot->recfm eq 'T')		{ &cobfile::writeTrec($refot, $$retstr); }
-		else { &dbglog($bobfile::Msglevel{'ERR'}, ("$myname,err ot_recfm"));}
-	}
-	return	$ret_record_exit;
-}
 
 # --------------------------------------------------------------
 # METHOD        : TRUE : editrec(\$refin, \$refot, $hexstr, \$retstr)
@@ -211,7 +181,7 @@ sub	editrec {
 #  R OK/NG
 # --------------------------------------------------------------
 sub	fmtprint {
-	my	($refin, $refot, $hexstr, $retstr)	=	@_;
+	my	($refin, $refot, $hexstr, $retstr, $ref_hash_array)	=	@_;
 
 	my	$myname	= (caller 0)[3];
 #
@@ -230,8 +200,12 @@ sub	fmtprint {
 ###########################################################
 ## レコードFMTに従い、項目ダンプを出力
 ###########################################################
-	my	$refto_array_fmtN	= $hash_for_array_fmts{ $whichfmt };
+#	my	$refto_array_fmtN	= $hash_for_array_fmts{ $whichfmt };
+#OK	foreach my $key(keys(%hash_for_array_fmts)) { print ">>$key\n"; }
+#OK	my	%array	= %{$ref_hash_array};	foreach my $key(keys(%array)) { print ">>$key\n";}
+	my	$refto_array_fmtN	= $ref_hash_array->{ $whichfmt };
 	my	@tmparray			= @$refto_array_fmtN;
+
 	foreach	my $refto_lst (@tmparray) {
 		my	($st,$ll,$type,$tag)	=	@$refto_lst;
 		&cobfile::dbglog($cobfile::Msglevel{'FNC'}, "$myname,ST:$st,LL:$ll,TY:$type,TG:$tag");
