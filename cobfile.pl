@@ -338,7 +338,7 @@ sub	dbglog {
 #  R OK/NG
 # --------------------------------------------------------------
 sub	hexeditFile {
-	my	($Infile, $Otfile)	=	@_;
+	my	($Infile, $Otfile, $ref_hash_array, $ref_hash_hash)	=	@_;
 
 	my	$myname	= (caller 0)[3];
 ## START-MSG
@@ -372,7 +372,7 @@ sub	hexeditFile {
 	my	$othex;
 	while((my $ll = &readBrec($Infile, \$inhex)) != $EOF ) {
 # -----------------------------------------------------------------------
-		if( &record_exit($Infile, $Otfile, $inhex, \$othex) == $EOF ){ last; };
+		if( &record_exit($Infile, $Otfile, $inhex, \$othex, $ref_hash_array, $ref_hash_hash) == $EOF ){ last; };
 # -----------------------------------------------------------------------
 	}
 # -----------------------------------------------------------------------
@@ -418,20 +418,22 @@ sub	hexeditFile {
 #  R OK/NG
 # --------------------------------------------------------------
 sub	record_exit {
-	my	($refin, $refot, $hexstr, $retstr)	=	@_;
+	my	($refin, $refot, $hexstr, $retstr, $ref_hash_array, $ref_hash_hash)	=	@_;
 
 	my	$myname	= (caller 0)[3];
 #
 	my	$ret_record_exit = '';
 	if($gOpt_edit eq 'edit') {
-		$ret_record_exit = &hexedit::editrec($refin, $refot, $hexstr, $retstr);
+#DBG	my	%hash	= %{$ref_hash_hash};
+#DBG	foreach my $key(keys(%hash)) { print ">$key\n"; }
+#
+		$ret_record_exit = &hexedit::editrec($refin, $refot, $hexstr, $retstr, $ref_hash_hash);
 		&dbglog($Msglevel{'DBG'}, "$myname,editrec returns:$$retstr");
 	} elsif($gOpt_edit eq 'fmtpr') {
-#### hexedit::hash_for_array_fmts はourで宣言されていること
-#OK		foreach my $key(keys(%hexedit::hash_for_array_fmts)) { print ">$key\n"; }
-		my	$ref_hash = \%hexedit::hash_for_array_fmts ;
-### 
-		$ret_record_exit = &hexedit::fmtprint($refin, $refot, $hexstr, $retstr, $ref_hash);
+#DBG	my	%hash	= %{$ref_hash_array};
+#DBG	foreach my $key(keys(%hash)) { print ">$key\n"; }
+#
+		$ret_record_exit = &fmtprint($refin, $refot, $hexstr, $retstr, $ref_hash_array);
 		&dbglog($Msglevel{'DBG'}, "$myname,fmtprint returns:$$retstr");
 	}
 	if( $ret_record_exit == $TRUE ) {
@@ -508,6 +510,56 @@ sub	hexedit_rep	{
 		"  $bk_record",
 		"->$$record"
 	);
+	return $TRUE;
+}
+
+# --------------------------------------------------------------
+# METHOD        : TRUE : fmtprint(\$refin, \$refot, $hexstr, \$retstr)
+# DESCRIPTION   : 入力レコード毎の出口、FMT判定とフォーマットダンプ出力を行う。
+# DESC-SUB		: TRUE以外を返却すると、その時点で &hexedit は終了する
+# PARAM
+#  i:\$refin	: 入力ファイルのFcntl
+#  i:\$refot	: 出力ファイルのFcntl
+#  i:hexstr		: 編集対象の１６進文字列(HEXSTR)
+#  o:\retstr	: 編集後の１６進文字列 (HEXSTR)
+# REURN
+#  R OK/NG
+# --------------------------------------------------------------
+sub	fmtprint {
+	my	($refin, $refot, $hexstr, $retstr, $ref_hash_array)	=	@_;
+
+	my	$myname	= (caller 0)[3];
+#
+	my	$errmsg = '';
+	$$retstr	= '';
+###########################################################
+## レコードFMT[ $whichfmt ]の確定
+###########################################################
+	my	$whichfmt	=	&hexedit::getfmtid($refin, \$errmsg, $hexstr);
+	my	$iocnt	=	$refin->iocnt;
+	&dbglog($Msglevel{'INF'}, "$myname,rec[$iocnt],RECFMT[$whichfmt]");
+	if($whichfmt eq '') {
+		&dbglog($Msglevel{'DBG'}, "$myname,RECFMT not found");
+		return	$FALSE;
+	}
+###########################################################
+## レコードFMTに従い、項目ダンプを出力
+###########################################################
+#	my	$refto_array_fmtN	= $hash_for_array_fmts{ $whichfmt };
+#OK	foreach my $key(keys(%hash_for_array_fmts)) { print ">>$key\n"; }
+#OK	my	%array	= %{$ref_hash_array};	foreach my $key(keys(%array)) { print ">>$key\n";}
+	my	$refto_array_fmtN	= $ref_hash_array->{ $whichfmt };
+	my	@tmparray			= @$refto_array_fmtN;
+
+	foreach	my $refto_lst (@tmparray) {
+		my	($st,$ll,$type,$tag)	=	@$refto_lst;
+		&dbglog($Msglevel{'FNC'}, "$myname,ST:$st,LL:$ll,TY:$type,TG:$tag");
+		my	$item	= &getitem($refin, \$errmsg, $hexstr, $st, $ll, $type, $tag, '');
+		$$retstr .= (sprintf "%s[%s]=%s ", $tag, $type, $item);
+	}
+	$iocnt	= $refot->iocnt;
+	$iocnt++;
+	$$retstr	= sprintf("[%6d] ", $iocnt) . $$retstr;
 	return $TRUE;
 }
 

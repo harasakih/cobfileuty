@@ -92,7 +92,13 @@ package	main;
 		 "DCB-DECENC:$decenc"
 		)
 	);
-	&cobfile::hexeditFile($Infile, $Otfile);
+
+#### %hexedit::hash_for_array_fmts,%hexedit::hash_for_hash_fmts は
+#### 外部から参照されるので、ourで宣言されていること
+	my	$ref_hash_array = \%hexedit::hash_for_array_fmts;
+	my	$ref_hash_hash  = \%hexedit::hash_for_hash_fmts;
+
+	&cobfile::hexeditFile($Infile, $Otfile, $ref_hash_array, $ref_hash_hash);
 
 # ---------------------------------------------------
 #	EXIT-Perl

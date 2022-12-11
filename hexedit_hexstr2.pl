@@ -32,8 +32,9 @@ my	%hash_fmt2	=	(
 	ITEM4 => [8,4,'CH','item24'],
 	ITEM5 => [12,8,'CH','item35']
 );
-## レコードフォーマットへのリファレンス
-## cobfile.plから参照できるように、ourで宣言する
+## レコードフォーマットへのリファレンスを持つハッシュ:%hash_for_hash_fmts
+##   cobfile.plから参照できるように、ourで宣言する
+##   cobfile.plから参照しているので、名前は変更付加
 our	%hash_for_hash_fmts = (
 	FMT1 => \%hash_fmt1, FMT2 => \%hash_fmt2
 );
@@ -53,8 +54,9 @@ my	@array_fmt2	=	(
 	[8,4,'CH','item24'],
 	[12,8,'CH','item35']
 );
-## レコードフォーマットへのリファレンス
-## cobfile.plから参照できるように、ourで宣言する
+## レコードフォーマットへのリファレンスを持つハッシュ:%hash_for_array_fmts
+##   cobfile.plから参照できるように、ourで宣言する
+##   cobfile.plから参照しているので、名前は変更付加
 our	%hash_for_array_fmts = (
 	FMT1 => \@array_fmt1, FMT2 => \@array_fmt2
 );
@@ -103,7 +105,7 @@ sub	getfmtid {
 #  R OK/NG
 # --------------------------------------------------------------
 sub	editrec {
-	my	($refin, $refot, $hexstr, $retstr)	=	@_;
+	my	($refin, $refot, $hexstr, $retstr, $ref_hash_hash)	=	@_;
 
 	my	$myname	= (caller 0)[3];
 	my	$errmsg;
@@ -119,25 +121,32 @@ sub	editrec {
 ###########################################################
 	my	$enc = '';
 
-	my	$refto_hash_fmtN	= $hash_for_hash_fmts{ $whichfmt };
+	my	$refto_hash_fmtN	= $ref_hash_hash->{ $whichfmt };
+#DBG	my	%hash	=	%{$refto_hash_fmtN};
+#DBG	print ">>ref_hash_hash\n";
+#DBG	foreach my $key(keys(%hash)) { print "$whichfmt>>$key\n";}
+#
 	my	($st,$len,$type,$tag);
 #### 変更START ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 	my	$buf = $hexstr;
 	if($whichfmt eq "FMT1") {
-		($st,$len,$type,$tag)	= @{$hash_fmt1{'ITEM3'}};
+#DBG	($st,$len,$type,$tag)	= @{$hash_fmt1{'ITEM3'}};				# FMTが確定しているので、直接アクセス
+#DBG	($st,$len,$type,$tag)	= @{$refto_hash_fmtN->{'ITEM3'}};		#
+# -------------------------------------------------------------------
+		($st,$len,$type,$tag)	= @{$ref_hash_hash->{ 'FMT1' }->{'ITEM2'}};
+		my	$item2	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
+		$item2 += 100;
+		my	$bb = &cobfile::num2bb(\$errmsg, $item2, $len);
+		&cobfile::hexedit_rep(\$buf, $st, $len, $bb);
+# -------------------------------------------------------------------
+		($st,$len,$type,$tag)	= @{$ref_hash_hash->{ 'FMT1' }->{'ITEM3'}};
 		my	$item3	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
 		$item3 -= 1;
 		my	$kpd = $len * 2 - 1;
 		my	$pd = &cobfile::num2spd(\$errmsg, $item3, $kpd);
 		&cobfile::hexedit_rep(\$buf, $st, $len, $pd);
 # -------------------------------------------------------------------
-		($st,$len,$type,$tag)	= @{$hash_fmt1{'ITEM2'}};
-		my	$item2	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
-		$item2 += 100;
-		my	$bb = &cobfile::num2bb(\$errmsg, $item2, $len);
-		&cobfile::hexedit_rep(\$buf, $st, $len, $bb);
-# -------------------------------------------------------------------
-		($st,$len,$type,$tag)	= @{$hash_fmt1{'ITEM4'}};
+		($st,$len,$type,$tag)	= @{$ref_hash_hash->{ 'FMT1' }->{'ITEM4'}};
 		my	$item4	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
 		if($item4 eq 'ｱｲｳｴ') {
 			$item4 = 'ｶｷｸｹ';
@@ -147,18 +156,19 @@ sub	editrec {
 # -------------------------------------------------------------------
 		$$retstr	=	$buf;
 	} elsif($whichfmt eq "FMT2") {
-		($st,$len,$type,$tag)	= @{$hash_fmt2{'ITEM3'}};
+# -------------------------------------------------------------------
+		($st,$len,$type,$tag)	= @{$ref_hash_hash->{ 'FMT2' }->{'ITEM2'}};
+		my	$item2	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
+		$item2 += 100;
+		my	$bl = &cobfile::num2bl(\$errmsg, $item2, $len);
+		&cobfile::hexedit_rep(\$buf, $st, $len, $bl);
+# -------------------------------------------------------------------
+		($st,$len,$type,$tag)	= @{$ref_hash_hash->{ 'FMT2' }->{'ITEM3'}};
 		my	$item3	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
 		$item3 += 1;
 		my	$kpd = $len * 2 - 1;
 		my	$pd = &cobfile::num2spd(\$errmsg, $item3, $kpd);
 		&cobfile::hexedit_rep(\$buf, $st, $len, $pd);
-# -------------------------------------------------------------------
-		($st,$len,$type,$tag)	= @{$hash_fmt2{'ITEM2'}};
-		my	$item2	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
-		$item2 += 100;
-		my	$bl = &cobfile::num2bl(\$errmsg, $item2, $len);
-		&cobfile::hexedit_rep(\$buf, $st, $len, $bl);
 # -------------------------------------------------------------------
 		$$retstr	=	$buf;
 	} else {
@@ -168,55 +178,6 @@ sub	editrec {
 	return $cobfile::TRUE;
 }
 
-# --------------------------------------------------------------
-# METHOD        : TRUE : fmtprint(\$refin, \$refot, $hexstr, \$retstr)
-# DESCRIPTION   : 入力レコード毎の出口、FMT判定とフォーマットダンプ出力を行う。
-# DESC-SUB		: TRUE以外を返却すると、その時点で &hexedit は終了する
-# PARAM
-#  i:\$refin	: 入力ファイルのFcntl
-#  i:\$refot	: 出力ファイルのFcntl
-#  i:hexstr		: 編集対象の１６進文字列(HEXSTR)
-#  o:\retstr	: 編集後の１６進文字列 (HEXSTR)
-# REURN
-#  R OK/NG
-# --------------------------------------------------------------
-sub	fmtprint {
-	my	($refin, $refot, $hexstr, $retstr, $ref_hash_array)	=	@_;
-
-	my	$myname	= (caller 0)[3];
-#
-	my	$errmsg = '';
-	$$retstr	= '';
-###########################################################
-## レコードFMT[ $whichfmt ]の確定
-###########################################################
-	my	$whichfmt	=	&getfmtid($refin, \$errmsg, $hexstr);
-	my	$iocnt	=	$refin->iocnt;
-	&cobfile::dbglog($cobfile::Msglevel{'INF'}, "$myname,rec[$iocnt],RECFMT[$whichfmt]");
-	if($whichfmt eq '') {
-		&cobfile::dbglog($cobfile::Msglevel{'DBG'}, "$myname,RECFMT not found");
-		return	$cobfile::FALSE;
-	}
-###########################################################
-## レコードFMTに従い、項目ダンプを出力
-###########################################################
-#	my	$refto_array_fmtN	= $hash_for_array_fmts{ $whichfmt };
-#OK	foreach my $key(keys(%hash_for_array_fmts)) { print ">>$key\n"; }
-#OK	my	%array	= %{$ref_hash_array};	foreach my $key(keys(%array)) { print ">>$key\n";}
-	my	$refto_array_fmtN	= $ref_hash_array->{ $whichfmt };
-	my	@tmparray			= @$refto_array_fmtN;
-
-	foreach	my $refto_lst (@tmparray) {
-		my	($st,$ll,$type,$tag)	=	@$refto_lst;
-		&cobfile::dbglog($cobfile::Msglevel{'FNC'}, "$myname,ST:$st,LL:$ll,TY:$type,TG:$tag");
-		my	$item	= &cobfile::getitem($refin, \$errmsg, $hexstr, $st, $ll, $type, $tag, '');
-		$$retstr .= (sprintf "%s[%s]=%s ", $tag, $type, $item);
-	}
-	$iocnt	= $refot->iocnt;
-	$iocnt++;
-	$$retstr	= sprintf("[%6d] ", $iocnt) . $$retstr;
-	return $cobfile::TRUE;
-}
 
 # --------------------------------------------------------------
 # METHOD        : TRUE : init_pre(\$refin, \$refot)
