@@ -35,7 +35,7 @@ my	%hash_fmt2	=	(
 	ITEM5 => [16,12,'CH','item25']
 );
 ## レコードフォーマットへのリファレンス
-my	%hash_for_hash_fmts = (
+our	%hash_for_hash_fmts = (
 	FMT1 => \%hash_fmt1, FMT2 => \%hash_fmt2
 );
 #### 変更END   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
@@ -54,7 +54,7 @@ my	@array_fmt2	=	(
 	[16,12,'CH','item25']
 );
 ## レコードフォーマットへのリファレンス
-my	%hash_for_array_fmts = (
+our	%hash_for_array_fmts = (
 	FMT1 => \@array_fmt1, FMT2 => \@array_fmt2
 );
 #### 変更END   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
@@ -91,39 +91,6 @@ sub	getfmtid {
 }
 
 # --------------------------------------------------------------
-# METHOD        : TRUE|EOF|FALSE : record_exit(\$refin, \$refot, $hexstr, \$retstr)
-# DESCRIPTION	: FWから呼び出される入力レコード毎の出口。fmtprint,edirrecへのラッパー
-# DESC-SUB		: EOFを返却すると、FWは終了処理へ向かう、以外はループ
-# PARAM
-#  i:\$refin	: 入力ファイルのFcntl
-#  i:\$refot	: 出力ファイルのFcntl
-#  i:$hexstr	: 読み込んだレコード（HEXSTR変換後）が渡される
-#  o:\$retstr	: FWに返却するレコード
-# REURN
-#  R OK/NG
-# --------------------------------------------------------------
-sub	record_exit {
-	my	($refin, $refot, $hexstr, $retstr)	=	@_;
-
-	my	$myname	= (caller 0)[3];
-#
-	my	$ret_record_exit = '';
-	if($cobfile::gOpt_edit eq 'edit') {
-		$ret_record_exit = &editrec($refin, $refot, $hexstr, $retstr);
-		&cobfile::dbglog($cobfile::Msglevel{'DBG'}, "$myname,editrec returns:$$retstr");
-	} elsif($cobfile::gOpt_edit eq 'fmtpr') {
-		$ret_record_exit = &fmtprint($refin, $refot, $hexstr, $retstr);
-		&cobfile::dbglog($cobfile::Msglevel{'DBG'}, "$myname,fmtprint returns:$$retstr");
-	}
-	if( $ret_record_exit == $cobfile::TRUE ) {
-		if($refot->recfm =~ /^[FV]$/)	{ &cobfile::writeBrec($refot, $$retstr); }
-		elsif($refot->recfm eq 'T')		{ &cobfile::writeTrec($refot, $$retstr); }
-		else { &dbglog($bobfile::Msglevel{'ERR'}, ("$myname,err ot_recfm"));}
-	}
-	return	$ret_record_exit;
-}
-
-# --------------------------------------------------------------
 # METHOD        : TRUE : editrec(\$refin, \$refot, $hexstr, \$retstr)
 # DESCRIPTION   : 入力レコード毎の出口、FMT判定と出力を行う。
 # DESC-SUB		: TRUE以外を返却すると、その時点で &hexedit は終了する
@@ -136,7 +103,7 @@ sub	record_exit {
 #  R OK/NG
 # --------------------------------------------------------------
 sub	editrec {
-	my	($refin, $refot, $hexstr, $retstr)	=	@_;
+	my	($refin, $refot, $hexstr, $retstr, $ref_hash_hash)	=	@_;
 
 	my	$myname	= (caller 0)[3];
 	my	$errmsg;
@@ -180,51 +147,6 @@ sub	editrec {
 	return $cobfile::TRUE;
 }
 
-# --------------------------------------------------------------
-# METHOD        : TRUE : fmtprint(\$refin, \$refot, $hexstr, \$retstr)
-# DESCRIPTION   : 入力レコード毎の出口、FMT判定とフォーマットダンプ出力を行う。
-# DESC-SUB		: TRUE以外を返却すると、その時点で &hexedit は終了する
-# PARAM
-#  i:\$refin	: 入力ファイルのFcntl
-#  i:\$refot	: 出力ファイルのFcntl
-#  i:hexstr		: 編集対象の１６進文字列(HEXSTR)
-#  o:\retstr	: 編集後の１６進文字列 (HEXSTR)
-# REURN
-#  R OK/NG
-# --------------------------------------------------------------
-sub	fmtprint {
-	my	($refin, $refot, $hexstr, $retstr)	=	@_;
-
-	my	$myname	= (caller 0)[3];
-#
-	my	$errmsg = '';
-	$$retstr	= '';
-###########################################################
-## レコードFMT[ $whichfmt ]の確定
-###########################################################
-	my	$whichfmt	=	&getfmtid($refin, \$errmsg, $hexstr);
-	my	$iocnt	=	$refin->iocnt;
-	&cobfile::dbglog($cobfile::Msglevel{'INF'}, "$myname,rec[$iocnt],RECFMT[$whichfmt]");
-	if($whichfmt eq '') {
-		&cobfile::dbglog($cobfile::Msglevel{'DBG'}, "$myname,RECFMT not found");
-		return	$cobfile::FALSE;
-	}
-###########################################################
-## レコードFMTに従い、項目ダンプを出力
-###########################################################
-	my	$refto_array_fmtN	= $hash_for_array_fmts{ $whichfmt };
-	my	@tmparray			= @$refto_array_fmtN;
-	foreach	my $refto_lst (@tmparray) {
-		my	($st,$ll,$type,$tag)	=	@$refto_lst;
-		&cobfile::dbglog($cobfile::Msglevel{'FNC'}, "$myname,ST:$st,LL:$ll,TY:$type,TG:$tag");
-		my	$item	= &cobfile::getitem($refin, \$errmsg, $hexstr, $st, $ll, $type, $tag, '');
-		$$retstr .= (sprintf "%s[%s]=%s ", $tag, $type, $item);
-	}
-	$iocnt	= $refot->iocnt;
-	$iocnt++;
-	$$retstr	= sprintf("[%6d] ", $iocnt) . $$retstr;
-	return $cobfile::TRUE;
-}
 
 # --------------------------------------------------------------
 # METHOD        : TRUE : init_pre(\$refin, \$refot)

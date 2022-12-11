@@ -37,8 +37,6 @@ HEXLST2A=$(HEXBASE2).A.lst
 
 SJISBASE=sjis
 INFSJIS=$(SJISBASE).txt		# INPUT
-SJISEDIT=$(SJISBASE).edit
-SJISBIN=$(SJISBASE).bin
 SJISLST=$(SJISBASE).lst
 
 MAPLST=COPY01.copy.lst
@@ -46,7 +44,6 @@ MAPLST=COPY01.copy.lst
 
 CLEAN=$(BINEDIT) $(BINLST1) $(BINLST2) $(BINBIN) \
   $(HEXBIN) $(HEXLST) \
-  $(SJISEDIT) $(SJISBIN) $(SJISLST) \
   $(HEXBIN2) $(HEXEDT2) $(HEXLST2B) $(HEXLST2A)
 
 dummy: 
@@ -55,7 +52,7 @@ dummy:
 	$(ECHO) ###########################################################
 
 all: dpput edit 
-edit: sjisedit hexedit_edit hexedit_iferr hexfmt_iferr hexedit2
+edit: hexedit_edit hexedit_iferr
 dpput: hexdp hexdpput hexput
 
 hexdp:
@@ -111,25 +108,17 @@ hexput:
 	./inqYN.sh
 	@echo "### hexput $(INFHEX) SUCCESS ###"
 
-sjisedit:
-	@echo "### hexedit $(INFSJIS) ###"
-	-@rm $(SJISEDIT)
-	./hexeditM.pl --recfm=F --lrecl=6 --inf=$(INFSJIS) --otf=$(SJISEDIT) --req=./hexedit_sjis.pl --edit=edit --logl=$(LOGL)
-	-bin/bincmp f6 $(INFSJIS) $(SJISEDIT)
-	@echo "### bincmp(diff) ###"
-	./inqYN.sh
-	@echo "### hexedit $(INFSJIS) SUCCESS ###"
-
 hexedit_edit:
-	@echo "### hexeditM(edit) $(INFBIN) ###"
-	-@rm $(BINEDIT)
-	./hexeditM.pl --recfm=V --inf=$(INFBIN) --otf=$(BINEDIT) --edit=edit --logl=$(LOGL)
-	./hexdpM.pl --recfm=V --inf=$(INFBIN)
-	./hexdpM.pl --recfm=V --inf=$(BINEDIT)
-	-bin/bincmp vn $(INFBIN) $(BINEDIT)
-	@echo "### bincmp(diff) ###"
+	@echo "### hexeditM $(INFHEX2) ###"
+	-@rm $(HEXBIN2) $(HEXEDT2) $(HEXLST2B) $(HEXLST2A)
+	./hexputM.pl --inf=$(INFHEX2) --recfm=V --otf=$(HEXBIN2)
+	./hexeditM.pl --inf=$(HEXBIN2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=edit --otf=$(HEXEDT2) --logl=WRN
+	./hexeditM.pl --inf=$(HEXBIN2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=fmtpr --otf=$(HEXLST2B) --iferr=hex
+	./hexeditM.pl --inf=$(HEXEDT2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=fmtpr --otf=$(HEXLST2A) --iferr=hex
+	-diff $(HEXLST2B) $(HEXLST2A)
+	@echo "### diff(diff) ###"
 	./inqYN.sh
-	@echo "### hexeditM(edit) $(INFBIN) SUCCESS ###"
+	@echo "### hexeditM $(INFHEX2) SUCCESS ###"
 
 hexedit_iferr:
 	@echo "### hexeditM(fmtpr) $(INFBIN) ###"
@@ -141,29 +130,6 @@ hexedit_iferr:
 	@echo "### diff(diff) ###"
 	./inqYN.sh
 	@echo "### hexeditM(fmtpr) $(INFBIN) SUCCESS ###"
-
-hexfmt_iferr:
-	@echo "### hexfmtM $(INFBIN) ###"
-	-@rm $(BINLST1)
-	-@rm $(BINLST2)
-	./hexfmtM.pl --recfm=V --inf=$(INFBIN) --otf=$(BINLST1) --logl=$(LOGL)
-	./hexfmtM.pl --recfm=V --inf=$(INFBIN) --otf=$(BINLST2) --logl=$(LOGL) --iferr=hex
-	-diff $(BINLST1) $(BINLST2)
-	@echo "### diff(diff) ###"
-	./inqYN.sh
-	@echo "### hexfmtM $(INFBIN) SUCCESS ###"
-
-hexedit2:
-	@echo "### hexfmtM $(INFHEX2) ###"
-	-@rm $(HEXBIN2) $(HEXEDT2) $(HEXLST2B) $(HEXLST2A)
-	./hexputM.pl --inf=$(INFHEX2) --recfm=V --otf=$(HEXBIN2)
-	./hexeditM.pl --inf=$(HEXBIN2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=edit --otf=$(HEXEDT2) --logl=WRN
-	./hexeditM.pl --inf=$(HEXBIN2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=fmtpr --otf=$(HEXLST2B) --iferr=hex
-	./hexeditM.pl --inf=$(HEXEDT2) --recfm=V  --req=./hexedit_hexstr2.pl --edit=fmtpr --otf=$(HEXLST2A) --iferr=hex
-	-diff $(HEXLST2B) $(HEXLST2A)
-	@echo "### diff(diff) ###"
-	./inqYN.sh
-	@echo "### hexfmtM $(INFHEX2) SUCCESS ###"
 
 copymap:
 	@echo "### copymap ###"

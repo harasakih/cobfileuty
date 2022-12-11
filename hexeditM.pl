@@ -19,7 +19,7 @@ package	main;
 # -------------------------------------
 	my	$myname	= File::Basename::basename $0;
 ## OPTION CHECK
-	my	$optck_return = &cobfile::optck("HEX"); 
+	my	$optck_return = &cobfile::optck("HEXEDIT"); 
 	if( $optck_return == $cobfile::TRUE ) 		{ ; }
 	elsif( $optck_return == $cobfile::FALSE) 	{ usage($myname); exit 0;}
 	else 										{ exit 1;}
