@@ -94,159 +94,109 @@ hexeditM.pl --recfm=V --inf=INFILE [--otf=OTFILE] --edit=edit [--req=sub.pl] [--
 ``hexfmtM.pl, hexeditM.pl``で使用する項目情報は、このファイルを参考とし、``#### 変更START ▼▼▼▼▼▼`` から ``#### 変更END   ▲▲▲▲▲▲`` で囲まれた箇所を修正する。
 Perlのコードを書くため、Perl文法に従い記述する。
 
-### hexfmt_sub.pl
-
-#### 項目情報の定義
-````pl
-my	@array_fmt1	=	(
-	[0,4,'ZD','item11'], 
-	[4,4,'PD','item12'], 
-	[8,4,'CH','item13']
-);
-my	@array_fmt2	=	(
-	[0,4,'ZD','item21'], 
-	[4,4,'PD','item22'], 
-	[8,4,'CH','item23'], 
-	[12,4,'XX','item24'],
-	[16,12,'CH','item25']
-);
-my	%hash_for_array_fmts = (
-	FMT1 => \@array_fmt1, FMT2 => \@array_fmt2
-);
-````
-
-- ```FMT1 => \@array_fmt1``` フォーマット名を定義する。右辺は、```my @array_fmt1```で項目の定義をした配列へのリファレンス。
-- ```[0,4,'ZD','item11']``` の形式で、開始位置（ゼロ基準）、項目長（バイト）、COBOL項目属性、項目見出し、を指定する
-
-#### フォーマット名の判定:getfmtid()
-変数```$fmdid```にフォーマット名を設定する。
-
-```pl
-# getfmtid()
-	my	@wk_hantei = (0, 4, 'XX', '');
-	my	$hantei	=	&cobfile::getitem($refin, \$myerrmsg, $hexstr, @wk_hantei, $decenc);
-	my	$fmtid = '';
-	if   ($hantei eq 'F0F1F2F3') {	$fmtid	=	"FMT1";	} 
-	elsif($hantei eq 'F3F5F6F7') {	$fmtid	=	"FMT1";	} 
-	elsif($hantei eq 'F1F2F3F4') {	$fmtid	=	"FMT2";	} 
-#	elsif($hantei eq 'F1F6F7F8') {	$fmtid	=	"FMT2";	} 
-	else { ; }
-```
-
-- 変数```$fmtid```に対して、```$fmtid = "FMT1"```のように、フォーマット名を設定する。
-	- 右辺は、```%hash_for_array_fmts```のKEYのどれかであること。(ex:FMT1,FMT2)
-- フォーマット名を判定する項目は、```&cobfile::getitem```を用いて取得する。
-	- 上記の項目は、```my @wk_hantei = (0, 4, 'XX', '')```のように、開始位置、項目長、COBOL項目即成、項目見出し(空文字列''で可)、で指定する。
-	- 複数項目の組み合わせで判定する場合は、```my @wk_hantei =```から```my $hantei	=```の行を変数名を変えて、同じように増殖する。
-	- ```$hantei```は、```@wk_hantei```のCOBOL属性にあわせて判定条件を記述する。(ex:XXは１６進文字列)。
 
 ### hexedit_sub.pl
-
 #### 項目情報の定義(--edit=edit用)
 ```pl 
-## レコードフォーマット＃１
+## レコードフォーマット情報（編集用）
 my	%hash_fmt1	=	(
-	ITEM1 => [0,4,'ZD','item11'], 
-	ITEM2 => [4,4,'PD','item12'], 
-	ITEM3 => [8,4,'CH','item13']
+	ITEM1 => [0,2,'ZD','item11'], 	# 3031
+	ITEM2 => [2,2,'BB','item12'], 
+	ITEM3 => [4,4,'PD','item13'],
+	ITEM4 => [8,4,'CH','item14']
 );
 my	%hash_fmt2	=	(
-	ITEM1 => [0,4,'ZD','item21'], 
-	ITEM2 => [4,4,'PD','item22'], 
-	ITEM3 => [8,4,'CH','item23'], 
-	ITEM4 => [12,4,'XX','item24'],
-	ITEM5 => [16,12,'CH','item25']
+	ITEM1 => [0,2,'ZD','item21'], 	# 3032
+	ITEM2 => [2,2,'BL','item22'], 
+	ITEM3 => [4,4,'PD','item23'],
+	ITEM4 => [8,4,'CH','item24'],
+	ITEM5 => [12,8,'CH','item35']
 );
-## レコードフォーマットへのリファレンス
-my	%hash_for_hash_fmts = (
+## レコードフォーマット管理情報（編集用）：レコードフォーマットへ情報（編集用）へのリファレンス
+our	%hash_for_hash_fmts = (
 	FMT1 => \%hash_fmt1, FMT2 => \%hash_fmt2
 );
 ```
 
 - ```FMT1 => \%hash_fmt1``` フォーマット名を定義する。右辺は、```my %hash_fmt1```で項目の定義をしたハッシュへのリファレンス。
-- ```ITEM1 => [0,4,'ZD','item11']``` の形式で、「項目名」と「開始位置（ゼロ基準）、項目長（バイト）、COBOL項目属性、項目見出し」、を指定する
+- ```ITEM1 => [0,2,'ZD','item11']``` の形式で、「項目名」と「開始位置（ゼロ基準）、項目長（バイト）、COBOL項目属性、項目見出し」、を指定する
+
 
 #### 項目情報の定義(--edit=fmtpr用)
 ```pl
+## レコードフォーマット情報（ダンプ用）
 my	@array_fmt1	=	(
-	[0,4,'ZD','item11'], 
+	[0,2,'ZD','item11'], 	# 3031
+	[2,2,'BB','item12'], 
+	[4,4,'PD','item13'],
+	[8,4,'CH','item14']
 );
 my	@array_fmt2	=	(
-	[0,4,'ZD','item21'], 
+	[0,2,'ZD','item21'], 	# 3032
+	[2,2,'BL','item22'], 
+	[4,4,'PD','item23'],
+	[8,4,'CH','item24'],
+	[12,8,'CH','item35']
 );
-## レコードフォーマットへのリファレンス
-my	%hash_for_array_fmts = (
+## レコードフォーマット管理情報（ダンプ用）：レコードフォーマットへ情報（ダンプ用）へのリファレンス
+our	%hash_for_array_fmts = (
 	FMT1 => \@array_fmt1, FMT2 => \@array_fmt2
 );
 ```
-```hexfmt_sub.pl```を参照。
+
 ```edit=fmtpr```時に、この箇所で指定した順に出力するため指定する。ハッシュを使って出力すると、キーソート順での出力しかできず、記載順の出力ができないため、重複記述となるがやむなし。
 
-#### フォーマット名の判定:getfmtid()
+- ```FMT1 => \@array_fmt1``` フォーマット名を定義する。右辺は、```my @array_fmt1```で項目の定義をした配列へのリファレンス。
+- ```[0,2,'ZD','item11']``` の形式で、開始位置（ゼロ基準）、項目長（バイト）、COBOL項目属性、項目見出し、を指定する
 
+#### フォーマット名の判定:getfmtid()
 ```pl
-# getfmtid()
-	my	@wk_hantei = (0, 4, 'XX', '');
-	my	$hantei	=	&cobfile::getitem($refin, \$myerrmsg, $hexstr, @wk_hantei, $decenc);
+	my	@wk_hantei = (0, 2, 'ZD', '');
+	my	$hantei	= &cobfile::getitem($refin, \$myerrmsg, $hexstr, @wk_hantei, $decenc);
 	my	$fmtid = '';
-	if   ($hantei eq 'F0F1F2F3') {	$fmtid	=	"FMT1";	} 
+	if   ($hantei eq "1") {	$fmtid = "FMT1"; } 
+	elsif($hantei eq "2") {	$fmtid = "FMT2"; } 
+	else { $fmtid = ''; }
 ```
 
-```hexfmt_sub.pl```を参照。
+- 変数```$fmtid```に対して、```$fmtid = "FMT1"```のように、フォーマット名を設定する。
+	- 右辺は、```%hash_for_array_fmts```のKEYのどれかであること。(ex:FMT1,FMT2)
+- フォーマット名を判定する項目は、```&cobfile::getitem```を用いて取得する。
+	- 上記の項目は、```my @wk_hantei = (0, 2, 'ZD', '')```のように、開始位置、項目長、COBOL項目即成、項目見出し(空文字列''で可)、で指定する。
+	- 複数項目の組み合わせで判定する場合は、```my @wk_hantei =```から```my $hantei	=```の行を変数名を変えて、同じように増殖する。
+	- ```$hantei```は、```@wk_hantei```のCOBOL属性にあわせて判定条件を記述する。(ex:XXは１６進文字列)。
 
 #### 項目編集（フォーマット毎の分岐）:editrec()
 次の箇所で、フォーマット名の処理ロジックを記述する
 - 入力は ```$hexstr``` 、出力は ```$$retstr`` で固定。
-- 出力は、 ```$$``` と、＄が二重であることに注意。
+- 出力は、 ```$$retstr``` と、＄が二重であることに注意。
 
 ```pl
 # editrec()
-	my	$refto_hash_fmtN	= $hash_for_hash_fmts{ $whichfmt };
-....
+# 変更は $buf に対して行う
+	my	$buf = $hexstr;
 	if($whichfmt eq "FMT1") {
-		フォーマット名が FMT1 の時の編集処理を書く書く。 。
-		下記は 入力をそのまま 出力する例。 
 # -------------------------------------------------------------------
-		$$retstr	=	$hexstr;
-	} elsif($whichfmt eq "FMT2") {
-		フォーマット名が FMT2 の時の編集処理を書く書く。
-		入力レコードを変更する時は、 $buf に転送後に編集し、$buf を $$retstr　に設定する。
-		my	$item3	=	&cobfile::getitem($refin, \$errmsg, $hexstr, (@{$$refto_hash_fmtN{ 'ITEM3' }}), $enc) ; 
+# FMT1,ITEM2の参照
+		($st,$len,$type,$tag)	= @{$ref_hash_hash->{ 'FMT1' }->{'ITEM2'}};
+		my	$item2	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
+# FMT1,ITEM2の変更(ワーク)
+		$item2 += 100;
+# ワークを１６進文字列に変換
+		my	$bb = &cobfile::num2bb(\$errmsg, $item2, $len);
+# 元の位置、長さで置換
+		&cobfile::hexedit_rep(\$buf, $st, $len, $bb);
 # -------------------------------------------------------------------
-		my	$buf	=	$hexstr;
-		($st,$len,$type,$tag)	= @{$$refto_hash_fmtN{ 'ITEM3' }};
-		&cobfile::hexedit_rep(\$buf, $st, $len, &cobfile::char2xx_tosjishex(\$errmsg, 'あい', 4));
+# $buf を返却用変数 $$retstr に設定する
 		$$retstr	=	$buf;
-	}
-```
-
-#### 項目編集（分岐後の項目の変更）:editrec()
-下記は、フォーマット名 ```FMT2``` の項目名 ```ITEM3``` を変更する例
-
-```pl
-# editrec()
-A	my	$refto_hash_fmtN	= $hash_for_hash_fmts{ $whichfmt };
-.....
 	} elsif($whichfmt eq "FMT2") {
-B		my	$item3	=	&cobfile::getitem($refin, \$errmsg, $hexstr, (@{$$refto_hash_fmtN{ 'ITEM3' }}), $enc) ; 
 # -------------------------------------------------------------------
-C		my	$buf	=	$hexstr;
-D-1		($st,$len,$type,$tag)	= @{$$refto_hash_fmtN{ 'ITEM3' }};
-D-2		($st,$len,$type,$tag)	= @{$hash_fmt2{'ITEM3'}};
-E		&cobfile::hexedit_rep(\$buf, $st, $len, &cobfile::char2xx_tosjishex(\$errmsg, 'あい', 4));
+# FMT2の時の編集（省略）
+		$$retstr	=	$buf;
+	} else {
+# -------------------------------------------------------------------
+# FMT不明時の動作
+		$$retstr	=	$hexstr;
 	}
 ```
-- 行A : ```$whichfmt```に設定されているフォーマット名から、項目属性のハッシュ）を参照するための```$refto_hash_fmtN```を設定する。
-- 行B : ```$item3``` に ```FMT2のITEM3```の内容を１６進文字列で取得する。上記例では未使用。
-- 行C : ```$buf```は変更用のワーク。
-- 行D-1 : ```@{$$refto_hash_fmtN{ 'ITEM3' }}```で、FMT2のITEM3の項目属性情報を取得する。(ref 行A)
-- 行D-2 : FMT2の項目情報```$hask_fmt2```を直接指定することも可。
-- 行E : ```&cobfile::hexedit_rep()```で、```$buf```の内容を変更する。
-	- １番目の引数、```\$buf``` : call by refferenceにして、bufの内容を変更する。
-	- ２、３番目の引数、```$st, $len``` : bufの中で変更する箇所の、開始位置、項目長（バイト）。
-	- ４番目の引数は変更値を１６進文字列で渡す。上記例では、’あい'のSJIS文字コードを１６進文字列で渡している。
-		- ```&cobfile::char2xx_tosjishex()```は、Perlソースに書かれた文字のSJISの文字コードを返す関数。
-
-
-
 
