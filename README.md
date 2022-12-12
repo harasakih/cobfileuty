@@ -68,32 +68,28 @@ hexputM.pl --recfm=F --lrecl=LRECL --inf=INFILE --otf=OTFILE --pad=hh
 
 ### フォーマットダンプ
 レコードを項目分解し、見出しをつけてダンプ出力する。
-項目情報はreqオプションで指定するファイルに記述する。reqオプション省略時は、```hexfmt_sub.pl```がデフォルト。
 
 ```sh
-hexfmtM.pl --recfm=F --lrecl=LRECL --inf=INFILE [--otf=OTFILE] [--req=sub.pl] [--iferr=hex|null]
-hexfmtM.pl --recfm=V --inf=INFILE [--otf=OTFILE] [--req=sub.pl] [--iferr=hex|null]
+hexeditM.pl --recfm=F --lrecl=LRECL --inf=INFILE [--otf=OTFILE] --edit=fmtpr [--req=sub.pl] [--iferr=hex|null|die]
+hexeditM.pl --recfm=V --inf=INFILE [--otf=OTFILE] --edit=fmtpr [--req=sub.pl] [--iferr=hex|null|die]
 ```
-- iferr=hex : 分解した項目が形式不正の場合、&H+１６進文字列で出力する。
-- iferr=null : 分解した項目が形式不正の場合、空文字となり何も出力しない。
-	- デフォルトは```null```
-
 ### ファイル編集
 レコードを項目分解し、編集する。
-項目情報はreqオプションで指定するファイルに記述する。reqオプション省略時は、```hexedit_sub.pl```がデフォルト。
 
 ```sh
-hexeditM.pl --recfm=F --lrecl=LRECL --inf=INFILE [--otf=OTFILE] --edit=edit [--req=sub.pl] [--iferr=hex|null]
-hexeditM.pl --recfm=V --inf=INFILE [--otf=OTFILE] --edit=edit [--req=sub.pl] [--iferr=hex|null]
+hexeditM.pl --recfm=F --lrecl=LRECL --inf=INFILE [--otf=OTFILE] --edit=edit [--req=sub.pl] [--iferr=hex|null|die]
+hexeditM.pl --recfm=V --inf=INFILE [--otf=OTFILE] --edit=edit [--req=sub.pl] [--iferr=hex|null|die]
 ```
+
+- req=FILENAME : 項目情報のファイル名を指定する。省略時は、```hexedit_sub.pl```がデフォルト。
 - iferr=hex : 分解した項目が形式不正の場合、&H+１６進文字列で出力する。
 - iferr=null :　分解した項目が形式不正の場合、空文字となり何も出力しない。
+- iferr=die : 分解した項目が形式不正の場合、即時終了。
 	- デフォルトは```null```
 
 ## 項目情報
-``hexfmtM.pl, hexeditM.pl``で使用する項目情報は、このファイルを参考とし、``#### 変更START ▼▼▼▼▼▼`` から ``#### 変更END   ▲▲▲▲▲▲`` で囲まれた箇所を修正する。
+``hexeditM.pl``で使用する項目情報は、このファイルを参考とし、``#### 変更START ▼▼▼▼▼▼`` から ``#### 変更END   ▲▲▲▲▲▲`` で囲まれた箇所を修正する。
 Perlのコードを書くため、Perl文法に従い記述する。
-
 
 ### hexedit_sub.pl
 #### 項目情報の定義(--edit=edit用)

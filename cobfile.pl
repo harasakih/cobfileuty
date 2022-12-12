@@ -151,10 +151,10 @@ sub	usage {
 	print STDOUT "  --logl  CRI|ERR|WRN|INF|DBG|FNC\n";
 	print STDOUT "for hexdpM.pl\n";
 	print STDOUT "  --dmp   lst|hexstr\n";
-	print STDOUT "for hexeditM.pl,hexfmtM.pl\n";
+	print STDOUT "for hexeditM.pl\n";
 	print STDOUT "  --edit  edit|fmtpr\n";
-	print STDOUT "  --req   subfile_name for edit,fmtpr\n";
-	print STDOUT "  --iferr null|hex. if num-err return null or &H+HEXSTR\n";
+	print STDOUT "  --req   subfile_name\n";
+	print STDOUT "  --iferr null|hex|die. if num-err return null or &H+HEXSTR or die.\n";
 	return	$TRUE;
 }
 
