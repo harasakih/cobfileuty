@@ -21,7 +21,7 @@ $cobfile::ZoneSignAbs	=	'F';
 #	フォーマット定義
 # --------------------------------------------------------------
 #### 変更START ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-## レコードフォーマット＃１
+## レコードフォーマット情報（編集用）
 my	%hash_fmt1	=	(
 	ITEM1 => [0,4,'ZD','item11'], 
 	ITEM2 => [4,4,'PD','item12'], 
@@ -34,13 +34,14 @@ my	%hash_fmt2	=	(
 	ITEM4 => [12,4,'XX','item24'],
 	ITEM5 => [16,12,'CH','item25']
 );
-## レコードフォーマットへのリファレンス
+## レコードフォーマット管理情報（編集用）：レコードフォーマットへ情報へのリファレンス
 our	%hash_for_hash_fmts = (
 	FMT1 => \%hash_fmt1, FMT2 => \%hash_fmt2
 );
 #### 変更END   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 #### 変更START ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+## レコードフォーマット情報（ダンプ用）
 my	@array_fmt1	=	(
 	[0,4,'ZD','item11'], 
 	[4,4,'PD','item12'], 
@@ -53,7 +54,7 @@ my	@array_fmt2	=	(
 	[12,4,'XX','item24'],
 	[16,12,'CH','item25']
 );
-## レコードフォーマットへのリファレンス
+## レコードフォーマット管理情報（ダンプ用）：レコードフォーマットへ情報へのリファレンス
 our	%hash_for_array_fmts = (
 	FMT1 => \@array_fmt1, FMT2 => \@array_fmt2
 );
@@ -91,7 +92,7 @@ sub	getfmtid {
 }
 
 # --------------------------------------------------------------
-# METHOD        : TRUE : editrec(\$refin, \$refot, $hexstr, \$retstr)
+# METHOD        : TRUE : editrec(\$refin, \$refot, $hexstr, \$retstr, \$ref_hash_hash)
 # DESCRIPTION   : 入力レコード毎の出口、FMT判定と出力を行う。
 # DESC-SUB		: TRUE以外を返却すると、その時点で &hexedit は終了する
 # PARAM
@@ -99,6 +100,7 @@ sub	getfmtid {
 #  i:\$refot	: 出力ファイルのFcntl
 #  i:hexstr		: 編集対象の１６進文字列(HEXSTR)
 #  o:\retstr	: 編集後の１６進文字列 (HEXSTR)
+#  i:\ref_hash_hash : レコードフォーマット管理情報（編集用）へのハッシュリファレンス
 # REURN
 #  R OK/NG
 # --------------------------------------------------------------
@@ -142,6 +144,8 @@ sub	editrec {
 		&cobfile::hexedit_rep(\$buf, $st, $len, '0A0B0C0D');
 
 		$$retstr	=	$buf;
+	} else {
+		$$retstr	=	$hexstr;
 	}
 #### 変更END   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 	return $cobfile::TRUE;

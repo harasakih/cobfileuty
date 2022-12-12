@@ -329,11 +329,14 @@ sub	dbglog {
 }
 
 # --------------------------------------------------------------
-# METHOD        : TRUE|FALSE : hexedit($Infile, $Otfile, $output)
+# METHOD        : TRUE|FALSE : hexeditFile($Infile, $Otfile, \$ref_hash_array, \$ref_hash_hash)
 # DESCRIPTION   : Framework for [init,editrec,term]. editrecで出力有無を判定し、バイナリファイルに出力orPRINTする。OPEN-CLOSEをする
 # PARAM
 #  i:$Infile	: 構造体Fctrl（リファレンス）
 #  i:$Otfile	: 構造体Fctrl（リファレンス）
+#  i:\$ref_hash_array : レコードフォーマット管理情報（ダンプ用）へのハッシュリファレンス
+#  i:\$ref_hash_hash  : レコードフォーマット管理情報（編集用）へのハッシュリファレンス
+#    $ref_hash_array,$ref_hash_hashはこの関数内ではアクセスせず、下位関数へ引き渡す。    
 # REURN
 #  R OK/NG
 # --------------------------------------------------------------
@@ -406,7 +409,7 @@ sub	hexeditFile {
 }
 
 # --------------------------------------------------------------
-# METHOD        : TRUE|EOF|FALSE : record_exit(\$refin, \$refot, $hexstr, \$retstr)
+# METHOD        : TRUE|EOF|FALSE : record_exit(\$refin, \$refot, $hexstr, \$retstr, \$ref_hash_array, \$ref_hash_hash)
 # DESCRIPTION	: FWから呼び出される入力レコード毎の出口。fmtprint,edirrecへのラッパー
 # DESC-SUB		: EOFを返却すると、FWは終了処理へ向かう、以外はループ
 # PARAM
@@ -414,8 +417,11 @@ sub	hexeditFile {
 #  i:\$refot	: 出力ファイルのFcntl
 #  i:$hexstr	: 読み込んだレコード（HEXSTR変換後）が渡される
 #  o:\$retstr	: FWに返却するレコード。FWは未使用
+#  i:\$ref_hash_array : レコードフォーマット管理情報（ダンプ用）へのハッシュリファレンス
+#  i:\$ref_hash_hash  : レコードフォーマット管理情報（編集用）へのハッシュリファレンス
+#    $ref_hash_array,$ref_hash_hashはこの関数内ではアクセスせず、editrec(),fptprintへ引き渡す。
 # REURN
-#  R OK/NG
+#  R OK/NG		: editrec(),fmtprint()の返却値をそのまま返却する
 # --------------------------------------------------------------
 sub	record_exit {
 	my	($refin, $refot, $hexstr, $retstr, $ref_hash_array, $ref_hash_hash)	=	@_;
@@ -446,7 +452,7 @@ sub	record_exit {
 
 # --------------------------------------------------------------
 # METHOD        : TRUE|FALSE : hexedit_rep(\$record,$st,$len,$hexstr)
-# DESCRIPTION   : substr(\$record,$st,$len)を、$hexstrで置き換える
+# DESCRIPTION   : substr(\$record,$st,$len)を、$hexstrで置き換える。hexstr不正時は即時FALSEでリターンする。
 # PARAM
 #  o:record		: ref to HEXSTR
 #  i:st			: Start positon, BTYE
@@ -514,14 +520,15 @@ sub	hexedit_rep	{
 }
 
 # --------------------------------------------------------------
-# METHOD        : TRUE : fmtprint(\$refin, \$refot, $hexstr, \$retstr)
-# DESCRIPTION   : 入力レコード毎の出口、FMT判定とフォーマットダンプ出力を行う。
+# METHOD        : TRUE|FALSE : fmtprint(\$refin, \$refot, $hexstr, \$retstr, \$ref_hash_array)
+# DESCRIPTION   : 入力レコード毎の出口、FMT判定とフォーマットダンプ出力を行う。FMT判定不可時はFALSEを返却。
 # DESC-SUB		: TRUE以外を返却すると、その時点で &hexedit は終了する
 # PARAM
 #  i:\$refin	: 入力ファイルのFcntl
 #  i:\$refot	: 出力ファイルのFcntl
 #  i:hexstr		: 編集対象の１６進文字列(HEXSTR)
 #  o:\retstr	: 編集後の１６進文字列 (HEXSTR)
+#  i:\ref_hash_array : レコードフォーマット管理情報（ダンプ用）へのハッシュリファレンス
 # REURN
 #  R OK/NG
 # --------------------------------------------------------------
@@ -566,7 +573,17 @@ sub	fmtprint {
 # --------------------------------------------------------------
 # METHOD        : perlval : getitem(\$ref, \$errmsg, $hexstr, $st, $len, $type, $midashi, $enc)
 # DESCRIPTION   : getitem2のラッパー、$midashiを省略。数値例外時は iferrの指定で、DIE,&H付加をする。
-# 
+# PARAM
+#   i:\ref
+#   o:\errmsg
+#   i:hexstr
+#   i:st
+#   i:len
+#   i:type
+#   i:midashi
+#   i:enc
+# REURN
+#  R OK/NG
 # --------------------------------------------------------------
 sub	getitem {
 	my	($ref, $errmsg, $hexstr, $st, $len, $type, $midashi, $enc)	=	@_;

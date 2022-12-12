@@ -18,7 +18,7 @@ use Encode 'decode', 'encode' ;
 #	フォーマット定義
 # --------------------------------------------------------------
 #### 変更START ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-## レコードフォーマット＃１
+## レコードフォーマット情報（編集用）
 my	%hash_fmt1	=	(
 	ITEM1 => [0,2,'ZD','item11'], 	# 3031
 	ITEM2 => [2,2,'BB','item12'], 
@@ -35,12 +35,14 @@ my	%hash_fmt2	=	(
 ## レコードフォーマットへのリファレンスを持つハッシュ:%hash_for_hash_fmts
 ##   cobfile.plから参照できるように、ourで宣言する
 ##   cobfile.plから参照しているので、名前は変更付加
+## レコードフォーマット管理情報（編集用）：レコードフォーマットへ情報（編集用）へのリファレンス
 our	%hash_for_hash_fmts = (
 	FMT1 => \%hash_fmt1, FMT2 => \%hash_fmt2
 );
 #### 変更END   ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 #### 変更START ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+## レコードフォーマット情報（ダンプ用）
 my	@array_fmt1	=	(
 	[0,2,'ZD','item11'], 	# 3031
 	[2,2,'BB','item12'], 
@@ -57,6 +59,7 @@ my	@array_fmt2	=	(
 ## レコードフォーマットへのリファレンスを持つハッシュ:%hash_for_array_fmts
 ##   cobfile.plから参照できるように、ourで宣言する
 ##   cobfile.plから参照しているので、名前は変更付加
+## レコードフォーマット管理情報（ダンプ用）：レコードフォーマットへ情報（ダンプ用）へのリファレンス
 our	%hash_for_array_fmts = (
 	FMT1 => \@array_fmt1, FMT2 => \@array_fmt2
 );
@@ -93,7 +96,7 @@ sub	getfmtid {
 
 
 # --------------------------------------------------------------
-# METHOD        : TRUE : editrec(\$refin, \$refot, $hexstr, \$retstr)
+# METHOD        : TRUE : editrec(\$refin, \$refot, $hexstr, \$retstr, \$ref_hash_hash)
 # DESCRIPTION   : 入力レコード毎の出口、FMT判定と出力を行う。
 # DESC-SUB		: TRUE以外を返却すると、その時点で &hexedit は終了する
 # PARAM
@@ -101,6 +104,7 @@ sub	getfmtid {
 #  i:\$refot	: 出力ファイルのFcntl
 #  i:hexstr		: 編集対象の１６進文字列(HEXSTR)
 #  o:\retstr	: 編集後の１６進文字列 (HEXSTR)
+#  i:\ref_hash_hash : レコードフォーマット管理情報（編集用）へのハッシュリファレンス
 # REURN
 #  R OK/NG
 # --------------------------------------------------------------
