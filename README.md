@@ -8,8 +8,8 @@ RECFM:COBOLファイルのレコード単位を識別し、レコード単位の
 | == Perl == | | | |
 | ファイルのHEXダンプ | hexdpM.pl | o | *1 |
 | ファイル作成 | hexputM.pl | o | *1 |
-| ファイル編集 | hexeditM.pl | o | *1 |
-| フォーマットダンプ | hexfmtM.pl | o | *1 |
+| ファイル編集(--edit=edit) | hexeditM.pl | o | *1 |
+| フォーマットダンプ(--edit=fmtpr) | hexeditM.pl | o | *1 |
 | == C言語 == | | |
 | ファイルのコンペア | bincmp.c *2 | o | bincmp.txt |
 | 可変長フィルの形式変換 | binconv.c *2 | o | binconv.txt | 
@@ -83,7 +83,7 @@ hexeditM.pl --recfm=V --inf=INFILE [--otf=OTFILE] --edit=edit [--req=sub.pl] [--
 
 - req=FILENAME : 項目情報のファイル名を指定する。省略時は、```hexedit_sub.pl```がデフォルト。
 - iferr=hex : 分解した項目が形式不正の場合、&H+１６進文字列で出力する。
-- iferr=null :　分解した項目が形式不正の場合、空文字となり何も出力しない。
+- iferr=null : 分解した項目が形式不正の場合、空文字となり何も出力しない。
 - iferr=die : 分解した項目が形式不正の場合、即時終了。
 	- デフォルトは```null```
 
@@ -160,11 +160,11 @@ our	%hash_for_array_fmts = (
 - フォーマット名を判定する項目は、```&cobfile::getitem```を用いて取得する。
 	- 上記の項目は、```my @wk_hantei = (0, 2, 'ZD', '')```のように、開始位置、項目長、COBOL項目即成、項目見出し(空文字列''で可)、で指定する。
 	- 複数項目の組み合わせで判定する場合は、```my @wk_hantei =```から```my $hantei	=```の行を変数名を変えて、同じように増殖する。
-	- ```$hantei```は、```@wk_hantei```のCOBOL属性にあわせて判定条件を記述する。(ex:XXは１６進文字列)。
+	- ```$hantei```は、```@wk_hantei```のCOBOL属性にあわせて判定条件を記述する。(ex:ZDはCOBOLの外部１０進)。
 
 #### 項目編集（フォーマット毎の分岐）:editrec()
 次の箇所で、フォーマット名の処理ロジックを記述する
-- 入力は ```$hexstr``` 、出力は ```$$retstr`` で固定。
+- 入力は ```$hexstr``` 、出力は ```$$retstr``` で固定。
 - 出力は、 ```$$retstr``` と、＄が二重であることに注意。
 
 ```pl
@@ -174,25 +174,25 @@ our	%hash_for_array_fmts = (
 	if($whichfmt eq "FMT1") {
 # -------------------------------------------------------------------
 # FMT1,ITEM2の参照
-		($st,$len,$type,$tag)	= @{$ref_hash_hash->{ 'FMT1' }->{'ITEM2'}};
-		my	$item2	=	&cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
+		($st,$len,$type,$tag) = @{$ref_hash_hash->{ 'FMT1' }->{'ITEM2'}};
+		my $item2 = &cobfile::getitem($refin, \$errmsg, $hexstr, ($st,$len,$type,$tag), $enc) ;
 # FMT1,ITEM2の変更(ワーク)
 		$item2 += 100;
 # ワークを１６進文字列に変換
-		my	$bb = &cobfile::num2bb(\$errmsg, $item2, $len);
+		my $bb = &cobfile::num2bb(\$errmsg, $item2, $len);
 # 元の位置、長さで置換
 		&cobfile::hexedit_rep(\$buf, $st, $len, $bb);
 # -------------------------------------------------------------------
 # $buf を返却用変数 $$retstr に設定する
-		$$retstr	=	$buf;
+		$$retstr = $buf;
 	} elsif($whichfmt eq "FMT2") {
 # -------------------------------------------------------------------
 # FMT2の時の編集（省略）
-		$$retstr	=	$buf;
+		$$retstr = $buf;
 	} else {
 # -------------------------------------------------------------------
 # FMT不明時の動作
-		$$retstr	=	$hexstr;
+		$$retstrv = $hexstr;
 	}
 ```
 
