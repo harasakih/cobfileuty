@@ -3,11 +3,12 @@
 ## 関数
 | 概要 | 関数 | 返却値 |
 | --- | ---- | --- |
-| 置換 | $x =~ tr/検索/置換/ | 左辺を変更 |
-| 部分文字列 | substr($文字列, 開始, 長さ) | 部分文字列。開始、長さは文字数 |
-| 関数名 | (caller 0)[3] | 自身の関数名。関数内で &dbglog() の引数で利用 |
-| バイナリを１６進文字列 | \$hexstr = unpack("H*", $hexval) | バイナリREADの結果（$hexval）を１６進文字列に |
-| １６進文字列をバイナリ | \$hexval = pack("H*", $hexstr) | １６進文字列をバイナリWRITE |
+| 置換 | ``$x =~ tr/検索/置換/`` | 左辺を変更 |
+| 部分文字列 | ``substr($文字列, 開始, 長さ)`` | 部分文字列。開始、長さは文字数 |
+| 関数名 | ``(caller 0)[3]`` | 自身の関数名。関数内で &dbglog() の引数で利用 |
+| call元 | ``($package_name, $file_name, $line) = caller`` | call元の(PKG名, ファイル名, 行数) |
+| バイナリを１６進文字列 | ``$hexstr = unpack("H*", $hexval)`` | バイナリREADの結果（$hexval）を１６進文字列に |
+| １６進文字列をバイナリ | ``$hexval = pack("H*", $hexstr)`` | １６進文字列をバイナリWRITE |
 
 
 ## エンコード・デコード
@@ -196,3 +197,65 @@ foreach my $key(keys(%gOpts)) {
 }
 ```
 
+### ハッシュのハッシュ
+hash_hashの要素が、```[...]```なので```@{}```でデリファレンス。
+
+```pl
+my	%hash_1 = (
+	KEY1 => [0,2,'ZD','item11'], 
+	KEY2 => [2,2,'BB','item12'], 
+	KEY3 => [4,4,'PD','item13'],
+	KEY4 => [8,4,'CH','item14']
+);
+my	%hash_2 = (
+	KEY1 => [0,2,'ZD','item21'], 
+	KEY2 => [2,2,'BL','item22'], 
+	KEY3 => [4,4,'PD','item23'],
+	KEY4 => [8,4,'CH','item24'],
+	KEY5 => [12,8,'CH','item35']
+);
+our	%hash_for_hash = (
+	KEYA => \%hash1, KEYB => \%hash2
+);
+
+
+my	$ref = \%hash_for_hash;
+func( $ref );
+
+sub	func {
+	my	($ref_hash_hash) = @_;
+
+	my	($st,$len,$type,$tag) = @{$ref_hash_hash->{'KEYA'}->{'KEY1'}};
+}
+```
+
+### ハッシュの先がアレイ
+
+```pl
+my @array1 = (
+	[0,2,'ZD','item11'],
+	[2,2,'BB','item12'], 
+	[4,4,'PD','item13'],
+	[8,4,'CH','item14']
+);
+my @array2 = (
+	[0,2,'ZD','item21'],
+	[2,2,'BL','item22'], 
+	[4,4,'PD','item23'],
+	[8,4,'CH','item24'],
+	[12,8,'CH','item35']
+);
+our	%hash_for_array = (
+	KEYA => \@array1, KEYB => \@array2
+);
+
+my	$ref = \%hash_for_array;
+func( $ref );
+
+sub func {
+	my	($ref_hash_array) = @_;
+
+	my	$ref_array = $ref_hash_array->{'KEYA'};
+	my	@array = @{$ref_array};
+}
+```
