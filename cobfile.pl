@@ -22,6 +22,8 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 use Getopt::Long 'GetOptions';
 use File::Basename 'basename', 'dirname';
+# micro-sec TIME 
+use	Time::HiRes qw/gettimeofday/;
 # use Encode;
 ## add perl-lib, samepath of this script
 # use FindBin;
@@ -72,6 +74,9 @@ our	%Msglevel = (ALL => 0, CRI => 1, ERR => 2, WRN => 3, INF => 4, DBG => 5, FNC
 our	$Reqfile	= '';
 #
 our	%Errcd	=	(NUM => 'ERR(NUM)', KET => 'ERR(KET)', HEX => 'ERR(HEX)');
+# TIME
+our	@Start_time;
+our	@End_time;
 
 #############################
 # CONSTANT
@@ -344,6 +349,8 @@ sub	hexeditFile {
 	my	($Infile, $Otfile, $ref_hash_array, $ref_hash_hash)	=	@_;
 
 	my	$myname	= (caller 0)[3];
+## get start time
+	@Start_time = gettimeofday();
 ## START-MSG
 #	my	$editmode = defined($gOpt_edit) ? $gOpt_edit : '';
 	my	$editmode = $gOpt_edit;
@@ -403,7 +410,9 @@ sub	hexeditFile {
 	if(&hexedit::term_aft($Infile, $Otfile) != $TRUE) { die "!!DIE $myname,term_aft returns FALSE:$!"; }
 # -----------------------------------------------------------------------
 ## END-MSG
-	&dbglog($Msglevel{'ALL'}, ("---- $0 NORMAL-END ----"));
+	@End_time = gettimeofday();
+	my	($elaps_sec, $elaps_micro) = &interval_microsec(@Start_time, @End_time);
+	&dbglog($Msglevel{'ALL'}, ("---- $0 NORMAL-END [ELAPS:$elaps_sec sec + $elaps_micro microsec] ----"));
 	return	$TRUE;
 
 }
@@ -1285,6 +1294,8 @@ sub	hexdp {
 	my	($Inf, $Otf, $type)	=	@_;
 
 	my	$myname	= (caller 0)[3];
+## get start time
+	@Start_time = gettimeofday();
 ## START-MSG
 	my	$addmsg	= "[";
 	$addmsg .= 	"logl=" . $Msgtag[&getLoglevel()] . "";
@@ -1374,7 +1385,10 @@ sub	hexdp {
 		&dbglog($Msglevel{'ERR'}, "$myname,cannot close otfile");
 		die "!!DIe $myname,close error:$!";
 	}
-	&dbglog($Msglevel{'ALL'}, ("---- $0 NORMAL-END ----"));
+## END-MSG
+	@End_time = gettimeofday();
+	my	($elaps_sec, $elaps_micro) = &interval_microsec(@Start_time, @End_time);
+	&dbglog($Msglevel{'ALL'}, ("---- $0 NORMAL-END [ELAPS:$elaps_sec sec + $elaps_micro microsec] ----"));
 	return $TRUE;
 } # hexdp
 
@@ -1419,6 +1433,8 @@ sub	hexputFile {
 	my	($Inf, $Otf)	=	@_;
 
 	my	$myname	= (caller 0)[3];
+## get start time
+	@Start_time = gettimeofday();
 ## START-MSG
 	my	$addmsg	= "[";
 	$addmsg .= 	"logl=" . $Msgtag[&getLoglevel()] . "";
@@ -1489,7 +1505,11 @@ sub	hexputFile {
 		&dbglog($Msglevel{'ERR'}, "$myname,cannot close otfile");
 		die "!!DIE $myname,close error:$!";
 	}
-	&dbglog($Msglevel{'ALL'}, ("---- $0 NORMAL-END ----"));
+
+## END-MSG
+	@End_time = gettimeofday();
+	my	($elaps_sec, $elaps_micro) = &interval_microsec(@Start_time, @End_time);
+	&dbglog($Msglevel{'ALL'}, ("---- $0 NORMAL-END [ELAPS:$elaps_sec sec + $elaps_micro microsec] ----"));
 	return $TRUE;
 } # hexputFile
 
@@ -2192,6 +2212,24 @@ sub	ishexstr {
 	}
 	return	$TRUE;
 }
+
+# --------------------------------------------------------------
+# METHOD        : Perl-int : interval_microsec(@t1, @t2);
+# DESCRIPTION   : time interval as microsec, t2 - t1
+# PARAM
+#  i:t1			: start time, ($sec1, $microsec1) as returnval of gettimeofday()
+#  i:t2			: enc time, ($sec2, $microsec2) as returncal of gettimeofday()
+# REURN
+#  (sec2 - sec1) * 1000000 + (microsec2 - microsec1)
+# --------------------------------------------------------------
+sub	interval_microsec {
+	my	($sec1, $microsec1, $sec2, $microsec2)	= @_;
+	my	$interval = ($sec2 - $sec1) * 1000000 + ($microsec2 - $microsec1);
+	my	$sec = int($interval / 1000000);
+	my	$micro = ($interval % 1000000);
+	return ($sec, $micro);
+}
+
 
 # ---------------------------------------------------
 #	EXIT-PACKAGE
