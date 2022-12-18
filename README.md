@@ -17,7 +17,8 @@ RECFM:COBOLファイルのレコード単位を識別し、レコード単位の
 | ファイルのHEXダンプ（ファイル単位） | hexdp.c *2 | x | hexdp.txt |
 
 *1 : Perlの処理概要で説明
-*2 : 添付の```makefile``にてmake
+
+*2 : 添付の`makefile`にてmake
 
 ## Perlの処理概要
 ### スクリプトに共通なオプション
